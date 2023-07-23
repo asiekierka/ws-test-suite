@@ -1,0 +1,5 @@
+.cache
+.vscode
+build
+compile_commands.json
+resources/font_ascii.bin
