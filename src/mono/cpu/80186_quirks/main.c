@@ -14,6 +14,8 @@ static const char __wf_rom msg_aam_non_10[] = "AAM, argument != 10:";
 extern bool check_aam_non_10(void);
 static const char __wf_rom msg_aad_non_10[] = "AAD, argument != 10:";
 extern bool check_aad_non_10(void);
+static const char __wf_rom msg_d6_salc[] = "Opcode 0xD6 is SALC:";
+extern bool check_d6_salc(void);
 
 int main(void) {
     text_init();
@@ -31,6 +33,11 @@ int main(void) {
     draw_pass_fail(i++, check_aam_non_10());
     text_puts(SCREEN_1, 0, 0, i, msg_aad_non_10);
     draw_pass_fail(i++, check_aad_non_10());
+
+    // Opcode 0xD6 on NEC V30MZ is the undocumented SALC,
+    // unlike NEC V20/V30 and like the 80186.
+    text_puts(SCREEN_1, 0, 0, i, msg_d6_salc);
+    draw_pass_fail(i++, check_d6_salc());
 
     while(1);
 }
