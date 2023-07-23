@@ -1,8 +1,8 @@
-#ifndef __RESOURCES_H__
-#define __RESOURCES_H__
+#ifndef _RESOURCES_H_
+#define _RESOURCES_H_
 
 #include <wonderful.h>
 
 #include "font_ascii_bin.h"
 
-#endif /* __RESOURCES_H__ */
+#endif /* _RESOURCES_H_ */

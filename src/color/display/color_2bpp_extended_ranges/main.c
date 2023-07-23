@@ -3,7 +3,6 @@
 #include <ws/display.h>
 #include <ws/hardware.h>
 #include <wsx/planar_unpack.h>
-#include "font_ascii_bin.h"
 #include "resources.h"
 
 #define SCREEN_1     ((uint8_t __wf_iram*) 0x1800)

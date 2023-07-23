@@ -42,8 +42,11 @@ ifneq ($(CBINDIRS),)
     INCLUDEDIRS		+= $(addprefix $(BUILDDIR)/,$(CBINDIRS))
 endif
 
-TEST_DIRECTORIES	:= $(shell find -L src -type f -name 'main.*' | sed 's#/[^/]*$$##')
-TEST_ROMS		:= $(addsuffix .wsc,$(subst src,build/roms,$(TEST_DIRECTORIES)))
+TEST_MONO_DIRECTORIES	:= $(shell find -L src/mono -type f -name 'main.*' | sed 's#/[^/]*$$##')
+TEST_COLOR_DIRECTORIES	:= $(shell find -L src/color -type f -name 'main.*' | sed 's#/[^/]*$$##')
+TEST_ROMS		:= \
+	$(addsuffix .ws,$(subst src,build/roms,$(TEST_MONO_DIRECTORIES))) \
+	$(addsuffix .wsc,$(subst src,build/roms,$(TEST_COLOR_DIRECTORIES)))
 TEST_SOURCES		:= $(shell find -L src -name "*.s") $(shell find -L src -name "*.c")
 COMMON_SOURCES		:= $(shell find -L common -name "*.s") $(shell find -L common -name "*.c")
 
@@ -98,6 +101,11 @@ compile_commands.json: $(OBJS) | Makefile
 
 # Rules
 # -----
+
+$(BUILDDIR)/%.ws : $(OBJS)
+	@echo "  ROMLINK $@"
+	@$(MKDIR) -p $(@D)
+	$(_V)$(ROMLINK) -v -o $@ -- $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,build/src,$(subst .ws,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
 
 $(BUILDDIR)/%.wsc : $(OBJS)
 	@echo "  ROMLINK $@"

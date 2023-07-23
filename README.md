@@ -4,6 +4,11 @@ My own assortment of various WonderSwan tests, designed to help understand the h
 
 Licensed under the MIT license.
 
+Tests are split into two main categories:
+
+* `mono` - WS/WSC-compatible tests,
+* `color` - WSC-exclusive tests.
+
 Other useful tests:
 
  * [WSTimingTest](https://github.com/FluBBaOfWard/WSTimingTest) - covers NEC V30MZ CPU instruction timing
