@@ -4,10 +4,13 @@
 #include <ws.h>
 #include <ws/display.h>
 #include <ws/hardware.h>
+#include <ws/system.h>
 #include "key.h"
 #include "text.h"
 
 // Timing validation tool. Work in progress - don't expect all advertised features to work yet.
+extern volatile uint16_t vblank_counter;
+void vblank_irq_handler(void);
 
 #define IRQ_AREA ((uint8_t __wf_iram*) 0x1000)
 #define SCREEN_1 ((uint16_t __wf_iram*) 0x1800)
@@ -77,6 +80,7 @@ action_t actions[MAX_ACTIONS];
 #define OPCODE_IN_AX_IMM 0xE5
 #define OPCODE_OUT_IMM_AL 0xE6
 #define OPCODE_OUT_IMM_AX 0xE7
+#define OPCODE_JMP_FAR 0xEA
 #define OPCODE_IRET 0xCF
 
 static uint8_t __wf_iram *buf;
@@ -89,16 +93,27 @@ static void generate_start_irq(uint8_t idx) {
 
 static void generate_finish_irq(uint8_t idx) {
     uint8_t mask = 1 << idx;
-    // MOV AL, mask
-    *(buf++) = OPCODE_MOV_AL_IMM;
-    *(buf++) = mask;
-    // OUT 0xB6, AL
-    *(buf++) = OPCODE_OUT_IMM_AL;
-    *(buf++) = IO_HWINT_ACK;
-    // POP AX
-    *(buf++) = OPCODE_POP_AX;
-    // IRET
-    *(buf++) = OPCODE_IRET;
+    if (idx == HWINT_IDX_VBLANK) {
+        // POP AX
+        *(buf++) = OPCODE_POP_AX;
+        // JMP vblank_irq_handler
+        *(buf++) = OPCODE_JMP_FAR;
+        *(buf++) = FP_OFF(vblank_irq_handler);
+        *(buf++) = FP_OFF(vblank_irq_handler) >> 8;
+        *(buf++) = FP_SEG(vblank_irq_handler);
+        *(buf++) = FP_SEG(vblank_irq_handler) >> 8;
+    } else {
+        // MOV AL, mask
+        *(buf++) = OPCODE_MOV_AL_IMM;
+        *(buf++) = mask;
+        // OUT 0xB6, AL
+        *(buf++) = OPCODE_OUT_IMM_AL;
+        *(buf++) = IO_HWINT_ACK;
+        // POP AX
+        *(buf++) = OPCODE_POP_AX;
+        // IRET
+        *(buf++) = OPCODE_IRET;
+    }
     ws_hwint_enable(mask);
 }
 
@@ -109,7 +124,8 @@ static void generate(void) {
     bool set_line = false;
 
     cpu_irq_disable();
-    ws_hwint_set(0x00);
+    ws_hwint_set(HWINT_VBLANK);
+    ws_hwint_set_handler(HWINT_IDX_VBLANK, vblank_irq_handler);
 
     buf = IRQ_AREA;
 
@@ -269,12 +285,12 @@ int main(void) {
     generate();
 
     while (true) {
-        if (irqs_set) {
+        uint16_t old_vbl_counter = vblank_counter;
+        while (old_vbl_counter == vblank_counter) {
             __asm volatile ("hlt\nnop\nnop\nnop");
-        } else {
-            while (inportb(IO_LCD_LINE) != 144);
         }
 
+        MEM_COLOR_PALETTE(0)[0] = 0xFFF;
         key_update();
         bool regenerate_irqs = false;
 
