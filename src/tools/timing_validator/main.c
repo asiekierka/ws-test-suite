@@ -11,6 +11,7 @@
 // Timing validation tool. Work in progress - don't expect all advertised features to work yet.
 extern volatile uint16_t vblank_counter;
 void vblank_irq_handler(void);
+uint16_t logged_value;
 
 #define IRQ_AREA ((uint8_t __wf_iram*) 0x1000)
 #define SCREEN_1 ((uint16_t __wf_iram*) 0x1800)
@@ -24,7 +25,11 @@ static const char __wf_rom msg_action_type_5[] = "GET PORTB A";
 static const char __wf_rom msg_action_type_6[] = "SET PORTW A";
 static const char __wf_rom msg_action_type_7[] = "GET PORTW A";
 static const char __wf_rom msg_action_type_8[] = "XOR BG A";
-#define ACTION_TYPE_IRQ_START              9
+static const char __wf_rom msg_action_type_9[] = "SPIN LINE";
+static const char __wf_rom msg_action_type_10[] = "LOG A";
+static const char __wf_rom msg_action_type_11[] = "WRITE W I";
+static const char __wf_rom msg_action_type_12[] = "WRITE W A";
+#define ACTION_TYPE_IRQ_START              13
 static const char __wf_rom msg_action_type_irq0[] = "IRQ HBTm";
 static const char __wf_rom msg_action_type_irq1[] = "IRQ VBln";
 static const char __wf_rom msg_action_type_irq2[] = "IRQ VBTm";
@@ -40,6 +45,10 @@ static const char __wf_rom* const __wf_rom msg_action_types[] = {
     msg_action_type_6,
     msg_action_type_7,
     msg_action_type_8,
+    msg_action_type_9,
+    msg_action_type_10,
+    msg_action_type_11,
+    msg_action_type_12,
     msg_action_type_irq0,
     msg_action_type_irq1,
     msg_action_type_irq2,
@@ -74,6 +83,7 @@ action_t actions[MAX_ACTIONS];
 #define OPCODE_PUSH_AX 0x50
 #define OPCODE_POP_AX 0x58
 #define OPCODE_NOP 0x90
+#define OPCODE_MOV_PTR_AX 0xA3
 #define OPCODE_MOV_AL_IMM 0xB0
 #define OPCODE_MOV_AX_IMM 0xB8
 #define OPCODE_IN_AL_IMM 0xE4
@@ -201,6 +211,26 @@ static void generate(void) {
                 } else {
                     // TODO: Mono variant
                 }
+            } else if (actions[i].type == 9) { /* SPIN LINE */
+                *(buf++) = OPCODE_IN_AL_IMM;
+                *(buf++) = IO_LCD_LINE;
+                *(buf++) = 0x3C; *(buf++) = actions[i].arg1; // CMP AL, arg1
+                *(buf++) = 0x75; *(buf++) = 0xFA; // JNE ..
+            } else if (actions[i].type == 10) { /* LOG A */
+                *(buf++) = OPCODE_MOV_PTR_AX;
+                *(buf++) = FP_OFF(&logged_value);
+                *(buf++) = FP_OFF(&logged_value) >> 8;
+            } else if (actions[i].type == 11) { /* WRITE W I */
+                *(buf++) = 0xC7; // MOV ptr, imm
+                *(buf++) = 0x06;
+                *(buf++) = actions[i].arg1;
+                *(buf++) = actions[i].arg1 >> 8;
+                *(buf++) = actions[i].arg2;
+                *(buf++) = actions[i].arg2 >> 8;
+            } else if (actions[i].type == 12) { /* WRITE W A */
+                *(buf++) = OPCODE_MOV_PTR_AX;
+                *(buf++) = actions[i].arg1;
+                *(buf++) = actions[i].arg1 >> 8;
             }
         }
     }
@@ -291,6 +321,7 @@ int main(void) {
         }
 
         MEM_COLOR_PALETTE(0)[0] = 0xFFF;
+        draw_action_hex(logged_value, false, 0, 0, 17);
         key_update();
         bool regenerate_irqs = false;
 
@@ -327,6 +358,9 @@ int main(void) {
             }
             if (keys_pressed & KEY_A) {
                 generate();
+            }
+            if (keys_pressed & KEY_B) {
+                ws_mode_set(ws_mode_get() ^ 0x80);
             }
 
             draw_action_line(selected_action, true, selected_part);
