@@ -1,7 +1,5 @@
 #include <string.h>
 #include <ws.h>
-#include <ws/display.h>
-#include <ws/hardware.h>
 #include "text.h"
 
 #define SCREEN_1 ((uint16_t __wf_iram*) 0x1800)

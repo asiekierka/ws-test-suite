@@ -44,6 +44,7 @@ endif
 
 TEST_MONO_DIRECTORIES	:= $(shell find -L src/mono -type f -name 'main.*' | sed 's#/[^/]*$$##')
 TEST_COLOR_DIRECTORIES	:= $(shell find -L src/color -type f -name 'main.*' | sed 's#/[^/]*$$##')
+TEST_MONO_DIRECTORIES	+= $(shell find -L src/tools type f -name 'main.*' | sed 's#/[^/]*$$##')
 TEST_ROMS		:= \
 	$(addsuffix .ws,$(subst src,build/roms,$(TEST_MONO_DIRECTORIES))) \
 	$(addsuffix .wsc,$(subst src,build/roms,$(TEST_COLOR_DIRECTORIES)))
