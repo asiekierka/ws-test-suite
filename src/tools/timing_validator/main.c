@@ -435,6 +435,8 @@ void subsystem_memory(void) {
 #define PORT_PAGES 7
 #define PORT_BYTE 0x0000
 #define PORT_WORD 0x8000
+#define PORT_READ_ONLY 0x4000
+static uint16_t port_values[16];
 static const uint16_t __wf_rom port_page_values[] = {
     0x00 | PORT_WORD,
     0x02 | PORT_BYTE,
@@ -551,13 +553,101 @@ static const uint16_t __wf_rom port_page_values[] = {
     0xB1 | PORT_BYTE,
     0xB3 | PORT_BYTE,
     0xB5 | PORT_BYTE,
-    0xBA | PORT_WORD,
-    0xBC | PORT_WORD,
-    0xBE | PORT_WORD
+    0xBA | PORT_WORD | PORT_READ_ONLY,
+    0xBC | PORT_WORD | PORT_READ_ONLY,
+    0xBE | PORT_WORD | PORT_READ_ONLY
 };
+static bool port_reload = true;
 
 void subsystem_io(void) {
-    /* TODO */
+    static int8_t x = 0;
+    static uint16_t y = 0;
+
+    if (subsystem_redraw) {
+        uint16_t page = (y & 0xFFF0);
+        for (uint8_t iy = 0; iy < 16; iy++) {
+            uint16_t port = port_page_values[page + iy];
+            if (port == 0xFFFF) {
+                ws_screen_fill_tiles(SCREEN_1, 0x20, 1, 1 + iy, 7, 1);
+                continue;
+            } else {
+                ws_screen_fill_tiles(SCREEN_1, 0x20, 6, 1 + iy, 2, 1);
+            }
+
+            draw_hex(port, 2, false, 0, 1, 1+iy);
+            if (port_reload) {
+                if (port & PORT_READ_ONLY) {
+                    port_values[iy] = 0;
+                } else if (port & PORT_WORD) {
+                    port_values[iy] = inportw(port & 0xFF);
+                } else {
+                    port_values[iy] = inportb(port & 0xFF);
+                }
+            }
+            draw_hex(port_values[iy], port & PORT_WORD ? 4 : 2, (y & 0x0F) == iy, x, 4, 1+iy);
+        }
+        subsystem_redraw = false;
+        port_reload = false;
+    }
+
+    if (keys_pressed != 0) {
+        subsystem_redraw = true;
+
+        if (keys_pressed & KEY_X1) {
+            do {
+                y = (y & 0xFFF0) | ((y - 1) & 0xF);
+            } while (port_page_values[y] == 0xFFFF);
+        }        
+        if (keys_pressed & KEY_X3) {
+            do {
+                y = (y & 0xFFF0) | ((y + 1) & 0xF);
+            } while (port_page_values[y] == 0xFFFF);
+        }
+        if (keys_pressed & KEY_Y4) {
+            if (y >= 16) {
+                y -= 16;
+                port_reload = true;
+            }
+        }
+        if (keys_pressed & KEY_Y2) {
+            if (y < (PORT_PAGES - 1) * 16) {
+                y += 16;
+                port_reload = true;
+            }
+        }
+        if (keys_pressed & KEY_X4) {
+            if (x > 0) {
+                x--;
+            }
+        }
+        if (keys_pressed & KEY_X2) {
+            x++;
+        }
+
+        int8_t max_x = (port_page_values[y] & PORT_WORD ? 3 : 1);
+        if (x > max_x) x = max_x;
+        if (!port_reload) {
+            uint8_t shift = (max_x - x) << 2;
+            uint8_t val = port_values[y & 0xF] >> shift;
+            if (keys_pressed & KEY_Y1) {
+                val++;
+            }
+            if (keys_pressed & KEY_Y3) {
+                val--;
+            }
+            port_values[y & 0xF] = (port_values[y & 0xF] & ~(0xF << shift)) | ((val & 0xF) << shift);
+            if (keys_pressed & KEY_A) {
+                if (port_page_values[y] & PORT_WORD) {
+                    outportw(port_page_values[y] & 0xFF, port_values[y & 0xF]);
+                } else {
+                    outportb(port_page_values[y] & 0xFF, port_values[y & 0xF]);
+                }
+            }
+        }
+        if (keys_pressed & KEY_B) {
+            port_reload = true;
+        }
+    }
 }
 
 int main(void) {
