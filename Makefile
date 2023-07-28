@@ -3,7 +3,7 @@
 # SPDX-FileContributor: Adrian "asie" Siekierka, 2023
 
 WONDERFUL_TOOLCHAIN ?= /opt/wonderful
-TARGET = wswan/small
+TARGET ?= wswan/small
 include $(WONDERFUL_TOOLCHAIN)/target/$(TARGET)/makedefs.mk
 
 INCLUDEDIRS	:= common
@@ -23,7 +23,17 @@ LIBDIRS		:= $(WF_TARGET_DIR)
 # Build artifacts
 # ---------------
 
-BUILDDIR	:= build
+ifeq ($(TARGET),wswan/bootfriend)
+    EXT_MONO := .bfb
+    EXT_COLOR := .bfb
+    BUILDDIR := build/wswan-bootfriend
+    BIN2C_FLAGS :=
+else
+    EXT_MONO := .ws
+    EXT_COLOR := .wsc
+    BUILDDIR := build/wswan-small
+    BIN2C_FLAGS := --address-space __far
+endif
 
 # Verbose flag
 # ------------
@@ -44,10 +54,10 @@ endif
 
 TEST_MONO_DIRECTORIES	:= $(shell find -L src/mono -type f -name 'main.*' | sed 's#/[^/]*$$##')
 TEST_COLOR_DIRECTORIES	:= $(shell find -L src/color -type f -name 'main.*' | sed 's#/[^/]*$$##')
-TEST_MONO_DIRECTORIES	+= $(shell find -L src/tools type f -name 'main.*' | sed 's#/[^/]*$$##')
+TEST_MONO_DIRECTORIES	+= $(shell find -L src/tools -type f -name 'main.*' | sed 's#/[^/]*$$##')
 TEST_ROMS		:= \
-	$(addsuffix .ws,$(subst src,build/roms,$(TEST_MONO_DIRECTORIES))) \
-	$(addsuffix .wsc,$(subst src,build/roms,$(TEST_COLOR_DIRECTORIES)))
+	$(addsuffix $(EXT_MONO),$(subst src,build/roms,$(TEST_MONO_DIRECTORIES))) \
+	$(addsuffix $(EXT_COLOR),$(subst src,build/roms,$(TEST_COLOR_DIRECTORIES)))
 TEST_SOURCES		:= $(shell find -L src -name "*.s") $(shell find -L src -name "*.c")
 COMMON_SOURCES		:= $(shell find -L common -name "*.s") $(shell find -L common -name "*.c")
 
@@ -103,15 +113,23 @@ compile_commands.json: $(OBJS) | Makefile
 # Rules
 # -----
 
-$(BUILDDIR)/%.ws : $(OBJS)
+build/%.ws : $(OBJS)
 	@echo "  ROMLINK $@"
 	@$(MKDIR) -p $(@D)
-	$(_V)$(ROMLINK) -v -o $@ -- $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,build/src,$(subst .ws,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
+	$(_V)$(ROMLINK) -v -o $@ -- $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .ws,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
 
-$(BUILDDIR)/%.wsc : $(OBJS)
+build/%.wsc : $(OBJS)
 	@echo "  ROMLINK $@"
 	@$(MKDIR) -p $(@D)
-	$(_V)$(ROMLINK) -v -o $@ -- $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,build/src,$(subst .wsc,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
+	$(_V)$(ROMLINK) -v -o $@ -- $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .wsc,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
+
+build/%.bfb : $(OBJS)
+	@echo "  LD      $@"
+	@$(MKDIR) -p $(subst build/roms,$(BUILDDIR)/roms,$@D)
+	$(_V)$(CC) -o $(subst build/roms,$(BUILDDIR)/roms,$@).elf $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .bfb,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS) -T$(WF_LDSCRIPT)
+	@echo "  OBJCOPY $@"
+	@$(MKDIR) -p $(@D)
+	$(_V)$(OBJCOPY) -O binary $(subst build/roms,$(BUILDDIR)/roms,$@).elf $@
 
 $(BUILDDIR)/%.s.o : %.s
 	@echo "  AS      $<"
@@ -126,7 +144,7 @@ $(BUILDDIR)/%.c.o : %.c
 $(BUILDDIR)/%.bin.o $(BUILDDIR)/%_bin.h : %.bin
 	@echo "  BIN2C   $<"
 	@$(MKDIR) -p $(@D)
-	$(_V)$(WF)/bin/wf-bin2c -a 2 --address-space __far $(@D) $<
+	$(_V)$(WF)/bin/wf-bin2c -a 2 $(BIN2C_FLAGS) $(@D) $<
 	$(_V)$(CC) $(CFLAGS) -MMD -MP -c -o $(BUILDDIR)/$*.bin.o $(BUILDDIR)/$*_bin.c
 
 # Include dependency files if they exist
