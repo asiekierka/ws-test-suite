@@ -133,7 +133,7 @@ build/%.bfb : $(OBJS)
 	@echo "  BFBLINK $@"
 	@$(MKDIR) -p $(@D)
 	@$(MKDIR) -p build/elfs/$(@D)
-	$(_V)$(CC) -r -o build/elfs/$@_stage1.elf $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .wsc,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
+	$(_V)$(CC) -r -o build/elfs/$@_stage1.elf $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .bfb,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
 	$(_V)$(BUILDBFB) -o $@ --output-elf build/elfs/$@.elf $(BUILDROMFLAGS) build/elfs/$@_stage1.elf
 
 $(BUILDDIR)/%.s.o : %.s
