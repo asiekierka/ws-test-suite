@@ -49,11 +49,20 @@ int main(void) {
     outportb(IO_HWINT_ACK, 0xFF);
     draw_pass_fail(i, 1, inportb(IO_HWINT_VECTOR) == 0x80);
 
-    // 0x80 => 7
-    outportw(IO_HBLANK_TIMER, 1);
-    outportw(IO_TIMER_CTRL, HBLANK_TIMER_ENABLE | HBLANK_TIMER_ONESHOT);
-    outportb(IO_HWINT_ENABLE, HWINT_HBLANK_TIMER);
+    // Trigger VBlank again.
+    outportb(IO_HWINT_ENABLE, HWINT_VBLANK);
     cpu_halt();
+    cpu_halt();
+
+    // 0x80 => 7
+    outportw(IO_HBLANK_TIMER, 2);
+    outportw(IO_TIMER_CTRL, HBLANK_TIMER_ENABLE | HBLANK_TIMER_REPEAT);
+    outportb(IO_HWINT_ENABLE, HWINT_HBLANK_TIMER);
+    // We can't trust cpu_halt at this point - VBlank is asserted.
+    while (inportw(IO_HBLANK_COUNTER) == 2);
+    while (inportw(IO_HBLANK_COUNTER) == 1);
+    while (inportw(IO_HBLANK_COUNTER) == 2);
+    while (inportw(IO_HBLANK_COUNTER) == 1);
     draw_pass_fail(i++, 0, inportb(IO_HWINT_VECTOR) == 0x87);
 
     while(1);
