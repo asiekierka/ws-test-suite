@@ -63,7 +63,9 @@ static const char __wf_rom msg_action_type_10[] = "LOG A";
 static const char __wf_rom msg_action_type_11[] = "WRITE W I";
 static const char __wf_rom msg_action_type_12[] = "WRITE W A";
 static const char __wf_rom msg_action_type_13[] = "SET A I";
-#define ACTION_TYPE_IRQ_START              14
+static const char __wf_rom msg_action_type_14[] = "SRAM READ B";
+static const char __wf_rom msg_action_type_15[] = "SRAM READ W";
+#define ACTION_TYPE_IRQ_START              16
 static const char __wf_rom msg_action_type_irq0[] = "IRQ HBTm";
 static const char __wf_rom msg_action_type_irq1[] = "IRQ VBln";
 static const char __wf_rom msg_action_type_irq2[] = "IRQ VBTm";
@@ -84,6 +86,8 @@ static const char __wf_rom* const __wf_rom msg_action_types[] = {
     msg_action_type_11,
     msg_action_type_12,
     msg_action_type_13,
+    msg_action_type_14,
+    msg_action_type_15,
     msg_action_type_irq0,
     msg_action_type_irq1,
     msg_action_type_irq2,
@@ -116,6 +120,9 @@ action_t actions[MAX_ACTIONS];
 #define OPCODE1_XOR_PTR_IMM 0x81
 #define OPCODE2_XOR_PTR_IMM 0x36
 #define OPCODE_PUSH_AX 0x50
+#define OPCODE_PUSH_DS 0x1E
+#define OPCODE_PUSH_IMM 0x68
+#define OPCODE_POP_DS 0x1F
 #define OPCODE_POP_AX 0x58
 #define OPCODE_NOP 0x90
 #define OPCODE_MOV_PTR_AX 0xA3
@@ -270,6 +277,26 @@ static void generate(void) {
                 *(buf++) = OPCODE_MOV_AX_IMM;
                 *(buf++) = actions[i].arg1;
                 *(buf++) = actions[i].arg1 >> 8;
+            } else if (actions[i].type == 14) { /* SRAM READ B */
+                *(buf++) = OPCODE_PUSH_DS;
+                *(buf++) = OPCODE_PUSH_IMM;
+                *(buf++) = 0x00;
+                *(buf++) = 0x10;
+                *(buf++) = OPCODE_POP_DS;
+                *(buf++) = 0xA0;
+                *(buf++) = actions[i].arg1;
+                *(buf++) = actions[i].arg1 >> 8;
+                *(buf++) = OPCODE_POP_DS;
+            } else if (actions[i].type == 15) { /* SRAM READ W */
+                *(buf++) = OPCODE_PUSH_DS;
+                *(buf++) = OPCODE_PUSH_IMM;
+                *(buf++) = 0x00;
+                *(buf++) = 0x10;
+                *(buf++) = OPCODE_POP_DS;
+                *(buf++) = 0xA1;
+                *(buf++) = actions[i].arg1;
+                *(buf++) = actions[i].arg1 >> 8;
+                *(buf++) = OPCODE_POP_DS;
             }
         }
     }
