@@ -2,7 +2,10 @@
 #include <ws.h>
 #include "text.h"
 
-#define SCREEN_1 ((uint16_t __wf_iram*) 0x1800)
+__attribute__((section(".iramcx_1800")))
+uint8_t SCREEN_1[0x800];
+__attribute__((section(".iramx_2000")))
+ws_tile_t tiles_2bpp[512];
 
 void draw_pass_fail(uint8_t y, bool result) {
     ws_screen_put_tile(SCREEN_1, result ? 5 : 6, 27, y);

@@ -5,10 +5,16 @@
 #include <wsx/planar_unpack.h>
 #include "resources.h"
 
-#define SCREEN_1     ((uint8_t __wf_iram*) 0x1800)
-#define SCREEN_1_EXT ((uint8_t __wf_iram*) 0x5800)
-#define SPRITES      ((ws_sprite_t __wf_iram*) 0x1600)
-#define SPRITES_EXT  ((ws_sprite_t __wf_iram*) 0x5600)
+__attribute__((section(".iramcx_1800")))
+ws_screen_cell_t SCREEN_1[32 * 32];
+__attribute__((section(".iramcx_5800")))
+ws_screen_cell_t SCREEN_1_EXT[32 * 32];
+__attribute__((section(".iramcx_1600")))
+ws_sprite_t SPRITES[128];
+__attribute__((section(".iramcx_5600")))
+ws_sprite_t SPRITES_EXT[128];
+__attribute__((section(".iramx_2000")))
+ws_tile_t tiles_2bpp[512];
 
 static const uint16_t __wf_rom header_text[] = {
     'c', 'o', 'l', 'o', 'r', '_', '2',

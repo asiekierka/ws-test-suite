@@ -15,8 +15,12 @@ extern volatile uint16_t vblank_counter;
 void vblank_irq_handler(void);
 uint16_t logged_value;
 
-#define IRQ_AREA ((uint8_t __wf_iram*) 0x1000)
-#define SCREEN_1 ((uint16_t __wf_iram*) 0x1800)
+__attribute__((section(".iramx_1000")))
+uint8_t IRQ_AREA[0x800];
+__attribute__((section(".iramx_1800")))
+uint16_t SCREEN_1[32 * 32];
+__attribute__((section(".iramx_2000")))
+ws_tile_t tiles_2bpp[512];
 
 /* SHARED HELPERS */
 

@@ -77,8 +77,10 @@ ASFLAGS		+= -x assembler-with-cpp $(DEFINES) $(WF_ARCH_CFLAGS) \
 CFLAGS		+= -std=gnu11 $(WARNFLAGS) $(DEFINES) $(WF_ARCH_CFLAGS) \
 		   $(INCLUDEFLAGS) -ffunction-sections -Os
 
-LDFLAGS		:= $(LIBDIRSFLAGS) -Wl,--gc-sections \
+LDFLAGS		:= -T$(WF_LDSCRIPT) $(LIBDIRSFLAGS) \
 		   $(WF_ARCH_LDFLAGS) $(LIBS)
+
+BUILDROMFLAGS	:= -v
 
 # Intermediate build files
 # ------------------------
@@ -116,20 +118,23 @@ compile_commands.json: $(OBJS) | Makefile
 build/%.ws : $(OBJS)
 	@echo "  ROMLINK $@"
 	@$(MKDIR) -p $(@D)
-	$(_V)$(ROMLINK) -v -o $@ -- $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .ws,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
+	@$(MKDIR) -p build/elfs/$(@D)
+	$(_V)$(CC) -r -o build/elfs/$@_stage1.elf $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .ws,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
+	$(_V)$(BUILDROM) -o $@ --output-elf build/elfs/$@.elf $(BUILDROMFLAGS) build/elfs/$@_stage1.elf
 
 build/%.wsc : $(OBJS)
 	@echo "  ROMLINK $@"
 	@$(MKDIR) -p $(@D)
-	$(_V)$(ROMLINK) -v -o $@ -- $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .wsc,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
+	@$(MKDIR) -p build/elfs/$(@D)
+	$(_V)$(CC) -r -o build/elfs/$@_stage1.elf $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .wsc,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
+	$(_V)$(BUILDROM) -o $@ --output-elf build/elfs/$@.elf $(BUILDROMFLAGS) build/elfs/$@_stage1.elf
 
 build/%.bfb : $(OBJS)
-	@echo "  LD      $@"
-	@$(MKDIR) -p $(subst build/roms,$(BUILDDIR)/roms,$@D)
-	$(_V)$(CC) -o $(subst build/roms,$(BUILDDIR)/roms,$@).elf $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .bfb,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS) -T$(WF_LDSCRIPT)
-	@echo "  OBJCOPY $@"
+	@echo "  BFBLINK $@"
 	@$(MKDIR) -p $(@D)
-	$(_V)$(OBJCOPY) -O binary $(subst build/roms,$(BUILDDIR)/roms,$@).elf $@
+	@$(MKDIR) -p build/elfs/$(@D)
+	$(_V)$(CC) -r -o build/elfs/$@_stage1.elf $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .wsc,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
+	$(_V)$(BUILDBFB) -o $@ --output-elf build/elfs/$@.elf $(BUILDROMFLAGS) build/elfs/$@_stage1.elf
 
 $(BUILDDIR)/%.s.o : %.s
 	@echo "  AS      $<"
