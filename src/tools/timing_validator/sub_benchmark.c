@@ -19,8 +19,6 @@ static const char __wf_rom msg_bench_type_4[] = "PORT R";
 static const char __wf_rom msg_bench_type_5[] = "PORT W";
 static const char __wf_rom msg_bench_type_6[] = "DMA>7000+";
 static const char __wf_rom msg_bench_type_7[] = "DMA>7000-";
-static const char __wf_rom msg_bench_type_8[] = "DMA>7000+U";
-static const char __wf_rom msg_bench_type_9[] = "DMA>7000-U";
 
 static const char __wf_rom* const __wf_rom msg_bench_types[] = {
     msg_bench_type_0,
@@ -30,11 +28,9 @@ static const char __wf_rom* const __wf_rom msg_bench_types[] = {
     msg_bench_type_4,
     msg_bench_type_5,
     msg_bench_type_6,
-    msg_bench_type_7,
-    msg_bench_type_8,
-    msg_bench_type_9
+    msg_bench_type_7
 };
-#define BENCH_TYPES 10
+#define BENCH_TYPES 8
 
 static const char __wf_rom msg_bench_start[] = "START";
 
@@ -145,12 +141,6 @@ void subsystem_benchmark(void) {
                 break;
             case 7:
                 draw_benchmark_result_raw(run_benchmark_dma(arg1, arg2, DMA_TRANSFER_ENABLE | DMA_ADDRESS_DEC), i++);
-                break;
-            case 8:
-                draw_benchmark_result_raw(run_benchmark_dma(arg1, arg2, DMA_TRANSFER_ENABLE | DMA_ADDRESS_INC | 1), i++);
-                break;
-            case 9:
-                draw_benchmark_result_raw(run_benchmark_dma(arg1, arg2, DMA_TRANSFER_ENABLE | DMA_ADDRESS_DEC | 1), i++);
                 break;
             }
         }

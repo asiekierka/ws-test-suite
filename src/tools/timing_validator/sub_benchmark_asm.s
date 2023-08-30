@@ -147,17 +147,14 @@ run_benchmark_dma:
 
     // arg3 = control value
     mov al, cl
-    and cx, 0x0001
     and al, 0xC0
     test al, 0x40
     jz 2f
     mov ax, 0xF000
-    sub ax, cx
     out 0x44, ax
 2:
     // destination address = always 0x7000
     mov ax, 0x7000
-    add ax, cx
     out 0x44, ax
 
     .reloc .+3, R_386_SEG16, "sync_hblank_timer!"
