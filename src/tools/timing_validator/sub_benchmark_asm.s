@@ -126,6 +126,50 @@ run_benchmark_io_write_word:
     popf
     retf
 
+    .global run_benchmark_dma
+run_benchmark_dma:
+    pushf
+    cli
+
+    // arg1 = source segment
+    rol ax, 4
+    push ax
+    and ax, 0xFFF0
+    out 0x40, ax
+    pop ax
+    and ax, 0x000F
+    out 0x42, ax
+
+    // arg2 = length
+    mov ax, dx
+    and ax, 0x7FFF
+    out 0x46, ax
+
+    // arg3 = control value
+    mov al, cl
+    and cx, 0x0001
+    and al, 0xC0
+    test al, 0x40
+    jz 2f
+    mov ax, 0xF000
+    sub ax, cx
+    out 0x44, ax
+2:
+    // destination address = always 0x7000
+    mov ax, 0x7000
+    add ax, cx
+    out 0x44, ax
+
+    .reloc .+3, R_386_SEG16, "sync_hblank_timer!"
+    call 0:sync_hblank_timer
+    out 0x48, al
+    .reloc .+3, R_386_SEG16, "ret_hblank_timer!"
+    call 0:ret_hblank_timer
+
+    popf
+    retf
+
+
     .section .data.benchmarks, "ax"
     .global run_benchmark_null_iram
 run_benchmark_null_iram:

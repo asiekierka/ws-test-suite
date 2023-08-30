@@ -3,6 +3,7 @@
 #include <string.h>
 #include <wonderful.h>
 #include <ws.h>
+#include <ws/hardware.h>
 #include <ws/keypad.h>
 #include "key.h"
 #include "main.h"
@@ -16,6 +17,10 @@ static const char __wf_rom msg_bench_type_2[] = "MEMORY R";
 static const char __wf_rom msg_bench_type_3[] = "MEMORY W";
 static const char __wf_rom msg_bench_type_4[] = "PORT R";
 static const char __wf_rom msg_bench_type_5[] = "PORT W";
+static const char __wf_rom msg_bench_type_6[] = "DMA>7000+";
+static const char __wf_rom msg_bench_type_7[] = "DMA>7000-";
+static const char __wf_rom msg_bench_type_8[] = "DMA>7000+U";
+static const char __wf_rom msg_bench_type_9[] = "DMA>7000-U";
 
 static const char __wf_rom* const __wf_rom msg_bench_types[] = {
     msg_bench_type_0,
@@ -23,9 +28,13 @@ static const char __wf_rom* const __wf_rom msg_bench_types[] = {
     msg_bench_type_2,
     msg_bench_type_3,
     msg_bench_type_4,
-    msg_bench_type_5
+    msg_bench_type_5,
+    msg_bench_type_6,
+    msg_bench_type_7,
+    msg_bench_type_8,
+    msg_bench_type_9
 };
-#define BENCH_TYPES 6
+#define BENCH_TYPES 10
 
 static const char __wf_rom msg_bench_start[] = "START";
 
@@ -39,11 +48,17 @@ extern uint16_t run_benchmark_io_read_byte(uint16_t arg1, uint16_t arg2) __far;
 extern uint16_t run_benchmark_io_read_word(uint16_t arg1, uint16_t arg2) __far;
 extern uint16_t run_benchmark_io_write_byte(uint16_t arg1, uint16_t arg2) __far;
 extern uint16_t run_benchmark_io_write_word(uint16_t arg1, uint16_t arg2) __far;
+extern uint16_t run_benchmark_dma(uint16_t arg1, uint16_t arg2, uint8_t ctrl) __far;
 
 static const char __wf_rom msg_bench_result[] = "%d.%02X";
+static const char __wf_rom msg_bench_result_raw[] = "%d";
 
 static void draw_benchmark_result(uint16_t result, int y) {
     text_printf(SCREEN_1, 0, 1, y, msg_bench_result, (result >> 5), ((result << 3) & 0xF));
+}
+
+static void draw_benchmark_result_raw(uint16_t result, int y) {
+    text_printf(SCREEN_1, 0, 1, y, msg_bench_result_raw, result);
 }
 
 void subsystem_benchmark(void) {
@@ -124,6 +139,18 @@ void subsystem_benchmark(void) {
             case 5:
                 draw_benchmark_result(run_benchmark_io_write_byte(arg2, arg1), i++);
                 draw_benchmark_result(run_benchmark_io_write_word(arg2, arg1), i++);
+                break;
+            case 6:
+                draw_benchmark_result_raw(run_benchmark_dma(arg1, arg2, DMA_TRANSFER_ENABLE | DMA_ADDRESS_INC), i++);
+                break;
+            case 7:
+                draw_benchmark_result_raw(run_benchmark_dma(arg1, arg2, DMA_TRANSFER_ENABLE | DMA_ADDRESS_DEC), i++);
+                break;
+            case 8:
+                draw_benchmark_result_raw(run_benchmark_dma(arg1, arg2, DMA_TRANSFER_ENABLE | DMA_ADDRESS_INC | 1), i++);
+                break;
+            case 9:
+                draw_benchmark_result_raw(run_benchmark_dma(arg1, arg2, DMA_TRANSFER_ENABLE | DMA_ADDRESS_DEC | 1), i++);
                 break;
             }
         }
