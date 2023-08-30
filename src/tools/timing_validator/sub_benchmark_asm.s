@@ -3,6 +3,7 @@
     .arch   i186
     .code16
     .intel_syntax noprefix
+    .section .fartext.benchmarks, "ax"
 
 // trashes AX
 sync_hblank_timer:
@@ -51,6 +52,77 @@ run_benchmark_null:
 
     pop si
     pop ds
+    popf
+    retf
+
+    .global run_benchmark_io_read_byte
+run_benchmark_io_read_byte:
+    pushf
+    cli
+
+    mov cx, 8192
+    .reloc .+3, R_386_SEG16, "sync_hblank_timer!"
+    call 0:sync_hblank_timer
+    .align 2, 0x90
+1:
+    in al, dx
+    loop 1b
+    .reloc .+3, R_386_SEG16, "ret_hblank_timer!"
+    call 0:ret_hblank_timer
+
+    popf
+    retf
+
+    .global run_benchmark_io_read_word
+run_benchmark_io_read_word:
+    pushf
+    cli
+    mov cx, 8192
+    .reloc .+3, R_386_SEG16, "sync_hblank_timer!"
+    call 0:sync_hblank_timer
+    .align 2, 0x90
+1:
+    in ax, dx
+    loop 1b
+    .reloc .+3, R_386_SEG16, "ret_hblank_timer!"
+    call 0:ret_hblank_timer
+
+    popf
+    retf
+
+    .global run_benchmark_io_write_byte
+run_benchmark_io_write_byte:
+    pushf
+    cli
+
+    mov cx, 8192
+    .reloc .+3, R_386_SEG16, "sync_hblank_timer!"
+    call 0:sync_hblank_timer
+    .align 2, 0x90
+1:
+    out dx, al
+    loop 1b
+    .reloc .+3, R_386_SEG16, "ret_hblank_timer!"
+    call 0:ret_hblank_timer
+
+    popf
+    retf
+
+    .global run_benchmark_io_write_word
+run_benchmark_io_write_word:
+    pushf
+    cli
+
+    mov cx, 8192
+    .reloc .+3, R_386_SEG16, "sync_hblank_timer!"
+    call 0:sync_hblank_timer
+    .align 2, 0x90
+1:
+    out dx, ax
+    loop 1b
+    .reloc .+3, R_386_SEG16, "ret_hblank_timer!"
+    call 0:ret_hblank_timer
+
     popf
     retf
 

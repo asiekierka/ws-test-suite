@@ -14,14 +14,18 @@ static const char __wf_rom msg_bench_type_0[] = "NULL";
 static const char __wf_rom msg_bench_type_1[] = "NULL IRAM";
 static const char __wf_rom msg_bench_type_2[] = "MEMORY R";
 static const char __wf_rom msg_bench_type_3[] = "MEMORY W";
+static const char __wf_rom msg_bench_type_4[] = "PORT R";
+static const char __wf_rom msg_bench_type_5[] = "PORT W";
 
 static const char __wf_rom* const __wf_rom msg_bench_types[] = {
     msg_bench_type_0,
     msg_bench_type_1,
     msg_bench_type_2,
-    msg_bench_type_3
+    msg_bench_type_3,
+    msg_bench_type_4,
+    msg_bench_type_5
 };
-#define BENCH_TYPES 4
+#define BENCH_TYPES 6
 
 static const char __wf_rom msg_bench_start[] = "START";
 
@@ -31,6 +35,10 @@ extern uint16_t run_benchmark_read_byte(uint16_t arg1, uint16_t arg2) __far;
 extern uint16_t run_benchmark_read_word(uint16_t arg1, uint16_t arg2) __far;
 extern uint16_t run_benchmark_write_byte(uint16_t arg1, uint16_t arg2) __far;
 extern uint16_t run_benchmark_write_word(uint16_t arg1, uint16_t arg2) __far;
+extern uint16_t run_benchmark_io_read_byte(uint16_t arg1, uint16_t arg2) __far;
+extern uint16_t run_benchmark_io_read_word(uint16_t arg1, uint16_t arg2) __far;
+extern uint16_t run_benchmark_io_write_byte(uint16_t arg1, uint16_t arg2) __far;
+extern uint16_t run_benchmark_io_write_word(uint16_t arg1, uint16_t arg2) __far;
 
 static const char __wf_rom msg_bench_result[] = "%d.%02X";
 
@@ -108,6 +116,14 @@ void subsystem_benchmark(void) {
             case 3:
                 draw_benchmark_result(run_benchmark_write_byte(arg1, arg2), i++);
                 draw_benchmark_result(run_benchmark_write_word(arg1, arg2), i++);
+                break;
+            case 4:
+                draw_benchmark_result(run_benchmark_io_read_byte(arg2, arg1), i++);
+                draw_benchmark_result(run_benchmark_io_read_word(arg2, arg1), i++);
+                break;
+            case 5:
+                draw_benchmark_result(run_benchmark_io_write_byte(arg2, arg1), i++);
+                draw_benchmark_result(run_benchmark_io_write_word(arg2, arg1), i++);
                 break;
             }
         }
