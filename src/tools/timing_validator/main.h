@@ -23,4 +23,14 @@ static inline void draw_hex(uint16_t value, uint8_t digits, bool selected, int s
 
 extern bool subsystem_redraw;
 
+/**
+ * @brief Modify hexadecimal value per-nibble.
+ * 
+ * @param v 16-bit hex value.
+ * @param shift Shift for 4-bit changed value.
+ * @param n Delta for 4-bit changed value.
+ * @return uint16_t New 16-bit hex value.
+ */
+uint16_t modify_hex4(uint16_t v, int shift, int n);
+
 #endif /* __MAIN_H__ */

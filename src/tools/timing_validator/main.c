@@ -31,6 +31,7 @@ void draw_subsystem_change(int subsystem) {
     ws_screen_put_tile(SCREEN_1, HIGHLIGHT(subsystem == 0) | ((uint8_t) 'T'), 0, 17);
     ws_screen_put_tile(SCREEN_1, HIGHLIGHT(subsystem == 1) | ((uint8_t) 'M'), 1, 17);
     ws_screen_put_tile(SCREEN_1, HIGHLIGHT(subsystem == 2) | ((uint8_t) 'I'), 2, 17);
+    ws_screen_put_tile(SCREEN_1, HIGHLIGHT(subsystem == 3) | ((uint8_t) 'B'), 3, 17);
     subsystem_redraw = true;
 }
 
@@ -96,6 +97,7 @@ typedef struct {
 } action_t;
 #define MAX_ACTIONS 16
 
+__attribute__((section(".iram.actions")))
 action_t actions[MAX_ACTIONS];
 
 #define OPCODE_PREFIX_SS 0x36
@@ -303,7 +305,7 @@ void draw_action_line(int action, bool selected, int selected_part) {
     draw_hex(actions[action].arg2, 4, selected, selected_part - 5, 23, 1+action);
 }
 
-uint16_t modify_hex(uint16_t v, int shift, int n) {
+uint16_t modify_hex4(uint16_t v, int shift, int n) {
     uint16_t val = (v >> shift) + n;
     return (v & (~(0xF << shift))) | ((val & 0xF) << shift);
 }
@@ -319,13 +321,13 @@ void modify_action(int a, int selected_part, int n) {
         case 2:
         case 3:
         case 4:
-            actions[a].arg1 = modify_hex(actions[a].arg1, (12 - ((selected_part - 1) * 4)), n);
+            actions[a].arg1 = modify_hex4(actions[a].arg1, (12 - ((selected_part - 1) * 4)), n);
             break;
         case 5:
         case 6:
         case 7:
         case 8:
-            actions[a].arg2 = modify_hex(actions[a].arg2, (12 - ((selected_part - 5) * 4)), n);
+            actions[a].arg2 = modify_hex4(actions[a].arg2, (12 - ((selected_part - 5) * 4)), n);
             break;
     }
 }
@@ -383,11 +385,12 @@ void subsystem_action(void) {
     }
 }
 
+#define SUBSYSTEM_COUNT 4
 extern void subsystem_memory(void);
 extern void subsystem_io(void);
+extern void subsystem_benchmark(void);
 
 int main(void) {
-    memset(actions, 0, sizeof(actions));
     actions[0].type = ACTION_TYPE_IRQ_START + 1; // IRQ VBln
 
     text_init();
@@ -397,11 +400,10 @@ int main(void) {
         MEM_COLOR_PALETTE(0)[1] = 0x000;
         MEM_COLOR_PALETTE(1)[0] = 0x000;
         MEM_COLOR_PALETTE(1)[1] = 0xFFF;
-    } else {
-        ws_display_set_shade_lut(SHADE_LUT_DEFAULT);
-        outportb(IO_SCR_PAL_0, MONO_PAL_COLORS(0, 7, 0, 0));
-        outportb(IO_SCR_PAL_1, MONO_PAL_COLORS(7, 0, 0, 0));
     }
+    ws_display_set_shade_lut(SHADE_LUT_DEFAULT);
+    outportb(IO_SCR_PAL_0, MONO_PAL_COLORS(0, 7, 0, 0));
+    outportb(IO_SCR_PAL_1, MONO_PAL_COLORS(7, 0, 0, 0));
     outportb(IO_SCR_BASE, SCR1_BASE(SCREEN_1));
     outportw(IO_DISPLAY_CTRL, DISPLAY_SCR1_ENABLE);
 
@@ -419,13 +421,14 @@ int main(void) {
         MEM_COLOR_PALETTE(0)[0] = 0xFFF;
         key_update();
         if (keys_released & KEY_START) {
-            selected_subsystem = (selected_subsystem + 1) % 3;
+            selected_subsystem = (selected_subsystem + 1) % SUBSYSTEM_COUNT;
             draw_subsystem_change(selected_subsystem);
         }
         switch (selected_subsystem) {
         case 0: subsystem_action(); break;
         case 1: subsystem_memory(); break;
         case 2: subsystem_io(); break;
+        case 3: subsystem_benchmark(); break;
         }
     }
 }
