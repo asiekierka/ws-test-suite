@@ -23,6 +23,8 @@ static const char __wf_rom msg_sdma_slow_sram[] = "SDMA<-slow SRAM OK:";
 static const char __wf_rom msg_sram_not_detected[] = "SRAM not detected!";
 static const char __wf_rom msg_sdma_hold[] = "SDMA hold OK:";
 static const char __wf_rom msg_sdma_finish_zeroes[] = "SDMA finish zeroes:";
+static const char __wf_rom msg_sdma_overflow_wraps[] = "SDMA overflow wraps:";
+static const char __wf_rom msg_sdma_ends_on_last_byte[] = "Ends on last byte:";
 
 static uint8_t sample_data[16];
 
@@ -134,6 +136,17 @@ int main(void) {
     draw_pass_fail(i, 2, inportw(IO_SDMA_LENGTH_L) == 0);
     draw_pass_fail(i, 1, inportw(IO_SDMA_LENGTH_H) == 0);
     draw_pass_fail(i++, 0, inportw(IO_SDMA_CTRL) == 0x03);
+
+    *((uint8_t*) MK_FP(0x0000, 0x000D)) = 0xFF;
+    *((uint8_t*) MK_FP(0x0000, 0x000E)) = 0xAA;
+    *((uint8_t*) MK_FP(0x0000, 0x000F)) = 0x55;
+    text_puts(screen_1, 0, 0, i, msg_sdma_overflow_wraps);
+    run_sdma_test(MK_FP(0xFFFF, 0x000F), 16, SDMA_TARGET_CH2 | SDMA_RATE_24000);
+    ws_busywait(16384);
+    draw_pass_fail(i, 1, inportw(IO_SDMA_SOURCE_L) == 0x000F);
+    draw_pass_fail(i++, 0, inportw(IO_SDMA_SOURCE_H) == 0);
+    text_puts(screen_1, 0, 0, i, msg_sdma_ends_on_last_byte);
+    draw_pass_fail(i++, 0, inportb(IO_SND_VOL_CH2) == 0xAA);
 
     while(1);
 }
