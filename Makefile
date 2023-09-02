@@ -120,14 +120,14 @@ build/%.ws : $(OBJS)
 	@$(MKDIR) -p $(@D)
 	@$(MKDIR) -p build/elfs/$(@D)
 	$(_V)$(CC) -r -o build/elfs/$@_stage1.elf $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .ws,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
-	$(_V)$(BUILDROM) -o $@ --output-elf build/elfs/$@.elf $(BUILDROMFLAGS) build/elfs/$@_stage1.elf
+	$(_V)$(BUILDROM) -o $@ -c $(subst build/roms,src,$(subst .ws,/wfconfig.toml,$@)) --output-elf build/elfs/$@.elf $(BUILDROMFLAGS) build/elfs/$@_stage1.elf
 
 build/%.wsc : $(OBJS)
 	@echo "  ROMLINK $@"
 	@$(MKDIR) -p $(@D)
 	@$(MKDIR) -p build/elfs/$(@D)
 	$(_V)$(CC) -r -o build/elfs/$@_stage1.elf $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .wsc,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
-	$(_V)$(BUILDROM) -o $@ --output-elf build/elfs/$@.elf $(BUILDROMFLAGS) build/elfs/$@_stage1.elf
+	$(_V)$(BUILDROM) -o $@ -c $(subst build/roms,src,$(subst .wsc,/wfconfig.toml,$@)) --output-elf build/elfs/$@.elf $(BUILDROMFLAGS) build/elfs/$@_stage1.elf
 
 build/%.bfb : $(OBJS)
 	@echo "  BFBLINK $@"

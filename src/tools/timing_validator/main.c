@@ -428,7 +428,9 @@ int main(void) {
         case 0: subsystem_action(); break;
         case 1: subsystem_memory(); break;
         case 2: subsystem_io(); break;
+#ifndef __IA16_CMODEL_TINY__
         case 3: subsystem_benchmark(); break;
+#endif
         }
     }
 }

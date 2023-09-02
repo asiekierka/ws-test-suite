@@ -10,10 +10,6 @@ ws_screen_cell_t screen_1[32 * 32];
 __attribute__((section(".iramx_2000")))
 ws_tile_t tiles_2bpp[512];
 
-void draw_pass_fail(uint8_t y, uint8_t offset, bool result) {
-    ws_screen_put_tile(screen_1, result ? 5 : 6, 27 - offset, y);
-}
-
 static const char __wf_rom msg_gdma_ignores_bit_0[] = "GDMA ignores bit 0:";
 static const char __wf_rom msg_gdma_source_20_bit[] = "GDMA source 20-bit:";
 static const char __wf_rom msg_gdma_sram_fails[] = "GDMA<-SRAM fails:";
@@ -21,16 +17,12 @@ static const char __wf_rom msg_gdma_slow_rom_fails[] = "GDMA<-slow ROM fails:";
 static const char __wf_rom msg_gdma_iram_ok[] = "GDMA<-IRAM OK:";
 static const char __wf_rom msg_gdma_fast_rom_ok[] = "GDMA<-fast ROM OK:";
 
+#define COLOR
+#include "test/pass_fail.h"
+
 int main(void) {
-    if (!ws_system_mode_set(WS_MODE_COLOR)) {
-        while(1);
-    }
-    text_init();
-    ws_screen_fill_tiles(screen_1, 32, 0, 0, 28, 18);
-    MEM_COLOR_PALETTE(0)[0] = 0x0FFF;
-    MEM_COLOR_PALETTE(0)[1] = 0x0000;
-    outportb(IO_SCR_BASE, SCR1_BASE(screen_1));
-    outportw(IO_DISPLAY_CTRL, DISPLAY_SCR1_ENABLE);
+    init_pass_fail();
+
     int i = 0;
 
     // source, destination, length don't set bit 0

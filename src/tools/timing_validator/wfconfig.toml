@@ -8,6 +8,6 @@ color = false
 rtc = false
 vertical = false
 
-# mapper = "2003"
-# rom_speed = 1
-# rom_bus_width = 16
+mapper = "2003"
+rom_speed = 1
+rom_bus_width = 16

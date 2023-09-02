@@ -1,3 +1,5 @@
+#ifndef __IA16_CMODEL_TINY__
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -146,3 +148,5 @@ void subsystem_benchmark(void) {
         }
     }
 }
+
+#endif

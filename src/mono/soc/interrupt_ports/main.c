@@ -9,19 +9,12 @@ ws_screen_cell_t screen_1[32 * 32];
 __attribute__((section(".iramx_2000")))
 ws_tile_t tiles_2bpp[512];
 
-void draw_pass_fail(uint8_t y, uint8_t offset, bool result) {
-    ws_screen_put_tile(screen_1, result ? 5 : 6, 27 - offset, y);
-}
-
 static const char __wf_rom msg_0xb0[] = "0xB4 => 0xB0:";
 
+#include "test/pass_fail.h"
+
 int main(void) {
-    text_init();
-    ws_screen_fill_tiles(screen_1, 32, 0, 0, 28, 18);
-    ws_display_set_shade_lut(SHADE_LUT_DEFAULT);
-    outportb(IO_SCR_PAL_0, MONO_PAL_COLORS(0, 7, 0, 0));
-    outportb(IO_SCR_BASE, SCR1_BASE(screen_1));
-    outportw(IO_DISPLAY_CTRL, DISPLAY_SCR1_ENABLE);
+    init_pass_fail();
 
     cpu_irq_disable();
     int i = 0;

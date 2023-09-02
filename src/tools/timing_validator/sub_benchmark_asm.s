@@ -1,3 +1,5 @@
+#ifndef __IA16_CMODEL_TINY__
+
 #include <wonderful.h>
 #include <ws.h>
     .arch   i186
@@ -292,4 +294,4 @@ run_benchmark_write_word:
     popf
     retf
 
-
+#endif
