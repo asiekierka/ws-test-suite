@@ -3,7 +3,9 @@
 #include <string.h>
 #include <wonderful.h>
 #include <ws.h>
+#include <wsx/planar_unpack.h>
 #include "key.h"
+#include "resources.h"
 #include "text.h"
 #include "main.h"
 
@@ -396,12 +398,26 @@ int main(void) {
     text_init();
     ws_screen_fill_tiles(SCREEN_1, 32, 0, 0, 28, 18);
     if (ws_mode_set(WS_MODE_COLOR)) {
+        // Load 4BPP ASCII font.
+        wsx_planar_unpack(MEM_TILE_4BPP(0), 128 * 8, font_ascii, WSX_PLANAR_UNPACK_1BPP_TO_4BPP_ZERO(1));
+        // Pre-initialize all color palettes.
+        for (uint16_t i = 0; i < 256; i++) {
+            uint8_t c = (i & 15) ^ 15;
+            MEM_COLOR_PALETTE(0)[i] = c * 0x111;
+        }
+        // Initialize specific color palettes.
         MEM_COLOR_PALETTE(0)[0] = 0xFFF;
         MEM_COLOR_PALETTE(0)[1] = 0x000;
         MEM_COLOR_PALETTE(1)[0] = 0x000;
-        MEM_COLOR_PALETTE(1)[1] = 0xFFF;
+        // 4bpp planar mode ignores color 0; make the highlight foreground a bit darker to compensate.
+        MEM_COLOR_PALETTE(1)[1] = 0xBBB;
     }
     ws_display_set_shade_lut(SHADE_LUT_DEFAULT);
+    // Pre-initialize all mono palettes.
+    for (uint8_t i = 0; i < 16; i++) {
+        outportb(IO_SCR_PAL(i), MONO_PAL_COLORS(0, 2, 4, 6));
+    }
+    // Initialize specific mono palettes
     outportb(IO_SCR_PAL_0, MONO_PAL_COLORS(0, 7, 0, 0));
     outportb(IO_SCR_PAL_1, MONO_PAL_COLORS(7, 0, 0, 0));
     outportb(IO_SCR_BASE, SCR1_BASE(SCREEN_1));
