@@ -80,7 +80,8 @@ CFLAGS		+= -std=gnu11 $(WARNFLAGS) $(DEFINES) $(WF_ARCH_CFLAGS) \
 LDFLAGS		:= -T$(WF_LDSCRIPT) $(LIBDIRSFLAGS) \
 		   $(WF_ARCH_LDFLAGS) $(LIBS)
 
-BUILDROMFLAGS	:= -v
+BUILDROMFLAGS	:=
+#BUILDROMFLAGS	+= -v
 
 # Intermediate build files
 # ------------------------
