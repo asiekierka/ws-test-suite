@@ -137,17 +137,17 @@ void draw_selector(const char __wf_rom *title, const char __wf_rom *__wf_rom *pa
 void gen_sample(int id) {
     int i = 0;
     switch(id) {
-    case 0: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 1) == 0) ? 0x7F : 0x80; i++; }
-    case 1: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 2) == 0) ? 0x7F : 0x80; i++; }
-    case 2: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i % 6) <= 2) ? 0x7F : 0x80; i++; }
-    case 3: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 4) == 0) ? 0x7F : 0x80; i++; }
-    case 4: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 1) == 0) ? 0xFF : 0x00; i++; }
-    case 5: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 2) == 0) ? 0xFF : 0x00; i++; }
-    case 6: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i % 6) <= 2) ? 0xFF : 0x00; i++; }
-    case 7: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 4) == 0) ? 0xFF : 0x00; i++; }
-    case 8: while (i < sizeof(audio_buffer)) { audio_buffer[i] = i; i++; }
-    case 9: memset(audio_buffer, 0xFF, sizeof(audio_buffer));
-    case 10: memset(audio_buffer, 0x00, sizeof(audio_buffer));
+    case 0: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 1) == 0) ? 0x7F : 0x80; i++; } break;
+    case 1: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 2) == 0) ? 0x7F : 0x80; i++; } break;
+    case 2: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i % 6) <= 2) ? 0x7F : 0x80; i++; } break;
+    case 3: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 4) == 0) ? 0x7F : 0x80; i++; } break;
+    case 4: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 1) == 0) ? 0xFF : 0x00; i++; } break;
+    case 5: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 2) == 0) ? 0xFF : 0x00; i++; } break;
+    case 6: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i % 6) <= 2) ? 0xFF : 0x00; i++; } break;
+    case 7: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 4) == 0) ? 0xFF : 0x00; i++; } break;
+    case 8: while (i < sizeof(audio_buffer)) { audio_buffer[i] = i; i++; } break;
+    case 9: memset(audio_buffer, 0xFF, sizeof(audio_buffer)); break;
+    case 10: memset(audio_buffer, 0x00, sizeof(audio_buffer)); break;
     }
 
 }
