@@ -13,6 +13,16 @@ ws_screen_cell_t screen_1[32 * 32];
 __attribute__((section(".iramx_2000")))
 ws_tile_t tiles_2bpp[512];
 
+const char __wf_rom hex_to_chr[] = "0123456789ABCDEF";
+
+void draw_hex(uint16_t value, uint8_t digits, uint16_t entry, int x, int y) {
+    uint8_t max = (digits - 1) << 2;
+    for (uint8_t i = 0; i < digits; i++) {
+        uint8_t h = (value >> (max - (i << 2))) & 0xF;
+        ws_screen_put_tile(screen_1, ((uint8_t) hex_to_chr[h]) | entry, x+i, y);
+    }
+}
+
 static const char __wf_rom msg_frequency[] = "Freq.: ";
 static const char __wf_rom msg_frequency0[] = "24 kHz";
 static const char __wf_rom msg_frequency1[] = "12 kHz";
@@ -91,6 +101,8 @@ static const char __wf_rom msg_sample5[] = " 6kHz Sq U";
 static const char __wf_rom msg_sample6[] = " 4kHz Sq U";
 static const char __wf_rom msg_sample7[] = " 3kHz Sq U";
 static const char __wf_rom msg_sample8[] = "Triangle";
+static const char __wf_rom msg_sample9[] = "All 1s";
+static const char __wf_rom msg_sample10[] = "All 0s";
 static const char __wf_rom *__wf_rom msg_sample_param[] = {
     msg_sample0,
     msg_sample1,
@@ -100,10 +112,11 @@ static const char __wf_rom *__wf_rom msg_sample_param[] = {
     msg_sample5,
     msg_sample6,
     msg_sample7,
-    msg_sample8
+    msg_sample8,
+    msg_sample9,
+    msg_sample10
 };
-#define MSG_SAMPLE_COUNT 9
-static const char __wf_rom msg_pointer[] = ">";
+#define MSG_SAMPLE_COUNT 11
 
 static const char __wf_rom msg_hvtester[] = "hvtester";
 static const char __wf_rom msg_hvtester2[] = "asie";
@@ -132,7 +145,9 @@ void gen_sample(int id) {
     case 5: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 2) == 0) ? 0xFF : 0x00; i++; }
     case 6: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i % 6) <= 2) ? 0xFF : 0x00; i++; }
     case 7: while (i < sizeof(audio_buffer)) { audio_buffer[i] = ((i & 4) == 0) ? 0xFF : 0x00; i++; }
-    case 8: while (i < sizeof(audio_buffer)) { audio_buffer[i] = i; i++; }        
+    case 8: while (i < sizeof(audio_buffer)) { audio_buffer[i] = i; i++; }
+    case 9: memset(audio_buffer, 0xFF, sizeof(audio_buffer));
+    case 10: memset(audio_buffer, 0x00, sizeof(audio_buffer));
     }
 
 }
@@ -205,8 +220,8 @@ int main(void) {
         outportb(IO_SND_OUT_CTRL, SND_OUT_HEADPHONES_ENABLE);
         if (subopt_pos[7]) subopt_pos[7] = 0;
 
-        text_puts(screen_1, SCR_ENTRY_PALETTE((option_pos == 6) ? 1 : 3), 19, 12, (subopt_pos[6] & 1) ? msg_disable : msg_enable);
-        text_puts(screen_1, SCR_ENTRY_PALETTE((option_pos == 7) ? 1 : 3), 19, 14, msg_reset);
+        text_puts(screen_1, SCR_ENTRY_PALETTE((option_pos == 6) ? 1 : 3), 19, 14, (subopt_pos[6] & 1) ? msg_disable : msg_enable);
+        text_puts(screen_1, SCR_ENTRY_PALETTE((option_pos == 7) ? 1 : 3), 19, 16, msg_reset);
 
         keys_pressed = 0;
         while (keys_pressed == 0) {
