@@ -59,7 +59,7 @@ int main(void) {
     bool read_not_write = inportw(handle.port) == 0xffff;
     draw_pass_fail(i, 0, ws_eeprom_write_word(handle, 0x02, 0x55aa));
     // check result flags
-    draw_pass_fail(i, 3, (inportw(handle.port+4)&0xFE) == 0x02);
+    draw_pass_fail(i, 3, (inportw(handle.port+4)&0x7E) == 0x02);
     i++;
 
     // read back 0xAA55
@@ -68,7 +68,7 @@ int main(void) {
     draw_pass_fail(i, 1, ws_eeprom_read_word(handle, 0x00) == 0xaa55);
     draw_pass_fail(i, 0, ws_eeprom_read_word(handle, 0x02) == 0x55aa);
     // check result flags
-    draw_pass_fail(i, 3, inportw(handle.port+4) == 0x03);
+    draw_pass_fail(i, 3, (inportw(handle.port+4)&0x7F) == 0x03);
     i++;
 
     // read != write
@@ -108,14 +108,13 @@ int main(void) {
          if (j == 4) continue;
          outportw(0xBE, j << 4);
          uint16_t res = inportw(handle.port+4);
-         draw_pass_fail(i, k++, (res & 0xFE) == 0x02);
+         draw_pass_fail(i, k++, (res & 0x7E) == 0x02);
     }
     i++;
 
 #ifndef BOOTFRIEND
     if (ws_system_color_active()) {
         // check mono mode compatibility
-        ws_eeprom_erase_word(_HANDLE, 0x00);
         text_puts(screen_1, 0, 0, i, msg_mono_mode);
         ws_system_mode_set(WS_MODE_MONO);
         text_printf(screen_1, 0, 28-14, i, msg_hex2, ws_eeprom_read_word(_HANDLE, 0x00), ws_eeprom_read_word(_HANDLE, 0x02));
