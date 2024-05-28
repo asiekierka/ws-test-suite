@@ -1,6 +1,7 @@
 #ifndef _BENCHMARK_H_
 #define _BENCHMARK_H_
 
+#include <stdint.h>
 #include <wonderful.h>
 
 void benchmark_init(void);

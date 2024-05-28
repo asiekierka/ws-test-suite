@@ -28,6 +28,7 @@ ifeq ($(TARGET),wswan/bootfriend)
     EXT_COLOR := .bfb
     BUILDDIR := build/wswan-bootfriend
     BIN2C_FLAGS :=
+    DEFINES += -DBOOTFRIEND
 else
     EXT_MONO := .ws
     EXT_COLOR := .wsc
