@@ -11,6 +11,7 @@
 // TODO: On IEEPROM, it appears that you cannot erase any word other than @0x000?
 #define ws_eeprom_erase_word(a,b) ws_eeprom_write_word(a,b,0xffff)
 #define MAX_COMMAND 7
+#define HANDLE_INTERNAL
 #else
 #define MAX_COMMAND 15
 #endif
@@ -35,6 +36,7 @@ static const char __wf_rom msg_mwrite_lock[] = "Mono w.lock";
 static const char __wf_rom msg_mwrite_unlock[] = "Mono w.unlock";
 static const char __wf_rom msg_hex2[] = "%04x %04x";
 static const char __wf_rom msg_invalid_cmds[] = "Invalid cmds";
+static const char __wf_rom msg_write_protect[] = "Write prot.";
 
 // TODO: Test ERAL/WRAL on non-internal EEPROMs
 
@@ -113,6 +115,18 @@ int main(void) {
          draw_pass_fail(i, k++, (res & 0x7E) == 0x02);
     }
     i++;
+
+#ifdef HANDLE_INTERNAL
+    // check write protect
+    ws_ieep_protect_enable();
+    text_puts(screen_1, 0, 0, i, msg_write_protect);
+    uint16_t value_to_protect = ws_eeprom_read_word(handle, 0x60);
+    ws_eeprom_write_word(handle, 0x60, value_to_protect ^ 0xFFFF);
+    text_printf(screen_1, 0, 28-14, i, msg_hex2, value_to_protect, ws_eeprom_read_word(handle, 0x60));
+    draw_pass_fail(i, 1, inportw(handle.port+4) & 0x80);
+    draw_pass_fail(i, 0, ws_eeprom_read_word(handle, 0x60) == value_to_protect);
+    i++;
+#endif
 
 #ifndef BOOTFRIEND
     if (ws_system_color_active()) {
