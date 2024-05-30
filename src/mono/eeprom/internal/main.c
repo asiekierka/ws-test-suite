@@ -30,7 +30,9 @@ static const char __wf_rom msg_read_not_write[] = "Read != Write";
 static const char __wf_rom msg_erase[] = "Erase";
 static const char __wf_rom msg_write_lock[] = "Write lock";
 static const char __wf_rom msg_write_unlock[] = "Write unlock";
-static const char __wf_rom msg_mono_mode[] = "Mono mode";
+static const char __wf_rom msg_mono_mode[] = "Mono read";
+static const char __wf_rom msg_mwrite_lock[] = "Mono w.lock";
+static const char __wf_rom msg_mwrite_unlock[] = "Mono w.unlock";
 static const char __wf_rom msg_hex2[] = "%04x %04x";
 static const char __wf_rom msg_invalid_cmds[] = "Invalid cmds";
 
@@ -121,6 +123,22 @@ int main(void) {
         draw_pass_fail(i, 1, ws_eeprom_read_word(_HANDLE, 0x00) == 0xaa55);
         draw_pass_fail(i, 0, ws_eeprom_read_word(_HANDLE, 0x02) == 0x55aa);
         ws_system_mode_set(WS_MODE_COLOR);
+        i++;
+
+        // lock writes
+        text_puts(screen_1, 0, 0, i, msg_mwrite_lock);
+        ws_eeprom_write_lock(handle);
+        ws_eeprom_write_word(handle, 0x00, 0x55aa);
+        text_printf(screen_1, 0, 28-14, i, msg_hex2, ws_eeprom_read_word(handle, 0x00), ws_eeprom_read_word(handle, 0x02));
+        draw_pass_fail(i, 0, ws_eeprom_read_word(handle, 0x00) == 0xaa55);
+        i++;
+
+        // unlock writes
+        text_puts(screen_1, 0, 0, i, msg_mwrite_unlock);
+        ws_eeprom_write_unlock(handle);
+        ws_eeprom_write_word(handle, 0x00, 0x55aa);
+        text_printf(screen_1, 0, 28-14, i, msg_hex2, ws_eeprom_read_word(handle, 0x00), ws_eeprom_read_word(handle, 0x02));
+        draw_pass_fail(i, 0, ws_eeprom_read_word(handle, 0x00) == 0x55aa);
         i++;
     }
 #endif
