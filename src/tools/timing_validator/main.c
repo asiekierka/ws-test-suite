@@ -168,7 +168,7 @@ static void generate(void) {
 
     cpu_irq_disable();
     ws_hwint_set(HWINT_VBLANK);
-    ws_hwint_set_handler(HWINT_IDX_VBLANK, vblank_irq_handler);
+    ws_hwint_set_handler(HWINT_IDX_VBLANK, (ws_int_handler_t) vblank_irq_handler);
 
     buf = IRQ_AREA;
 
@@ -415,7 +415,7 @@ int main(void) {
     ws_display_set_shade_lut(SHADE_LUT_DEFAULT);
     // Pre-initialize all mono palettes.
     for (uint8_t i = 0; i < 16; i++) {
-        outportb(IO_SCR_PAL(i), MONO_PAL_COLORS(0, 2, 4, 6));
+        outportw(IO_SCR_PAL(i), MONO_PAL_COLORS(0, 2, 4, 6));
     }
     // Initialize specific mono palettes
     outportb(IO_SCR_PAL_0, MONO_PAL_COLORS(0, 7, 0, 0));
