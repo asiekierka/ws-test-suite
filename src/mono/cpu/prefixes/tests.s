@@ -1,4 +1,6 @@
 #include <wonderful.h>
+#include <ws.h>
+
     .arch   i186
     .code16
     .intel_syntax noprefix
@@ -34,19 +36,6 @@ tile_data_es_ok:
 tile_data_ss_ok:
     .byte 'S', 0, 'S', 0, 5, 0, 0, 0
     .byte 0, 0, 0, 0, 0, 0, 0, 0
-
-    .global irq_handler_single_step
-irq_handler_single_step:
-    push bp
-    mov bp, sp
-    push ax
-
-    mov ax, [bp + 2]
-    mov [return_address], ax
-
-    pop ax
-    pop bp
-    iret
 
     // AX - tile offset
     .global do_ds_stosw
@@ -253,7 +242,87 @@ do_cs_rep8_movsw:
 
     WF_PLATFORM_RET
 
+    .global do_store_ip_on_irq
+do_store_ip_on_irq:
+    push bp
+    mov bp, sp
+    push ax
+    mov ax, [bp + 2]
+    ss mov [ip_on_irq], ax
+    mov al, HWINT_HBLANK_TIMER
+    out IO_HWINT_ACK, al
+    pop ax
+    pop bp
+    iret
+
+    .global do_rep_es8_movsb_irq
+do_rep_es8_movsb_irq:
+    push ds
+    push es
+    push si
+    push di
+
+    // copy tile area from IRAM to IRAM
+    push 0xF000
+    pop ds
+    push 0x0000
+    pop es
+
+    mov si, 0x2000
+    mov di, 0x2000
+    mov cx, (128 * 16)
+    cld
+
+    // initialize the HBlank timer
+    xor ax, ax
+    out IO_TIMER_CTRL, ax
+    inc ax
+    out IO_HBLANK_TIMER, ax
+
+    // wait for stabilization
+    in al, IO_LCD_LINE
+    mov ah, al
+1:
+    in al, IO_LCD_LINE
+    cmp ah, al
+    je 1b
+
+    // start the HBlank timer
+    mov al, 8
+    out IO_HWINT_VECTOR, al
+    mov ax, offset do_store_ip_on_irq
+    ss mov word ptr [15 * 4], ax
+    mov ax, cs
+    ss mov word ptr [15 * 4 + 2], ax
+    mov al, HWINT_HBLANK_TIMER
+    out IO_HWINT_ENABLE, al
+    out IO_HWINT_ACK, al
+    mov ax, HBLANK_TIMER_ENABLE | HBLANK_TIMER_REPEAT
+    out IO_TIMER_CTRL, ax
+
+    mov bx, sp
+
+    pushf
+    sti
+
+    // start the MOV
+    .global rep_es8_movsb_irq_start
+rep_es8_movsb_irq_start:
+    .byte OVERRIDE_REP, OVERRIDE_ES, OVERRIDE_ES, OVERRIDE_ES, OVERRIDE_ES, OVERRIDE_ES, OVERRIDE_ES
+    .byte OVERRIDE_ES, OVERRIDE_ES
+    movsb
+
+    ss mov ax, [ip_on_irq]
+
+    popf
+
+    pop di
+    pop si
+    pop es
+    pop ds
+
+    WF_PLATFORM_RET
+
     .section ".bss"
-    .global return_address
-return_address:
+ip_on_irq:
     .word 0
