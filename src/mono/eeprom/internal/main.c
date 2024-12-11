@@ -194,9 +194,17 @@ int main(void) {
     // 3. Send Abort command -> DONE is set
     outportw(IO_CART_EEP_CTRL, 0x80);
     draw_pass_fail(i, 2, (inportw(IO_CART_EEP_CTRL) & 0x01) == 0x01);
-    // 4. Send Short command -> DONE is cleared
+    // 4. Send Short command -> DONE is cleared and stays cleared
     outportw(IO_CART_EEP_CTRL, 0x40);
     draw_pass_fail(i, 3, (inportw(IO_CART_EEP_CTRL) & 0x01) == 0x00);
+    bool bit0_done_set = false;
+    for (int j = 0; j < 1000; j++) {
+        if ((inportw(IO_CART_EEP_CTRL) & 0x01) == 0x01) {
+            bit0_done_set = true;
+            break;
+        }
+    }
+    draw_pass_fail(i, 4, !bit0_done_set);
     i++;
 #else
     // 2001 bit 0 non-errata (Done)
