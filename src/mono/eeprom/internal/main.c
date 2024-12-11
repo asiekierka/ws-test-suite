@@ -40,6 +40,8 @@ static const char __wf_rom msg_hex0[] = "%02x";
 static const char __wf_rom msg_invalid_cmds[] = "Invalid cmds";
 static const char __wf_rom msg_write_protect[] = "Write prot.";
 static const char __wf_rom msg_sram_open_bus[] = "SRAM open bus";
+static const char __wf_rom msg_2001_bit0[] = "2001 bit 0 errata";
+static const char __wf_rom msg_ieep_bit0[] = "IEEP bit 0";
 
 // TODO: Test ERAL/WRAL on non-internal EEPROMs
 
@@ -180,6 +182,42 @@ int main(void) {
     uint8_t open_bus = *((uint8_t __far*) MK_FP(0x1000, 0x8000));
     text_printf(screen_1, 0, 28-4, i, msg_hex0, open_bus);
     i++;
+
+    // 2001 bit 0 errata (Done)
+    text_puts(screen_1, 0, 0, i, msg_2001_bit0);
+    // 1. Read word -> READY and DONE is set
+    ws_eeprom_read_word(handle, 0x00);
+    draw_pass_fail(i, 0, (inportw(IO_CART_EEP_CTRL) & 0x03) == 0x03);
+    // 2. Send Read command -> DONE is set (bug?)
+    outportw(IO_CART_EEP_CTRL, 0x10);
+    draw_pass_fail(i, 1, (inportw(IO_CART_EEP_CTRL) & 0x01) == 0x01);
+    // 3. Send Abort command -> DONE is set
+    outportw(IO_CART_EEP_CTRL, 0x80);
+    draw_pass_fail(i, 2, (inportw(IO_CART_EEP_CTRL) & 0x01) == 0x01);
+    // 4. Send Short command -> DONE is cleared
+    outportw(IO_CART_EEP_CTRL, 0x40);
+    draw_pass_fail(i, 3, (inportw(IO_CART_EEP_CTRL) & 0x01) == 0x00);
+    i++;
+#else
+    // 2001 bit 0 non-errata (Done)
+    text_puts(screen_1, 0, 0, i, msg_ieep_bit0);
+    // 1. Read word -> READY and DONE are set
+    ws_eeprom_read_word(handle, 0x00);
+    draw_pass_fail(i, 0, (inportw(IO_IEEP_CTRL) & 0x03) == 0x03);
+    // 2. Send Read command -> DONE is cleared, then set
+    outportw(IO_IEEP_CTRL, 0x10);
+    draw_pass_fail(i, 1, (inportw(IO_IEEP_CTRL) & 0x01) == 0x00);
+    bool ieep_bit0_done_set = false;
+    for (int j = 0; j < 1000; j++) {
+        if ((inportw(IO_IEEP_CTRL) & 0x01) == 0x01) {
+            ieep_bit0_done_set = true;
+            break;
+        }
+    }
+    draw_pass_fail(i, 2, ieep_bit0_done_set);
+    // 3. Send Read command -> DONE is cleared (Short is cleared too fast to be caught at WSC/SC timings)
+    outportw(IO_IEEP_CTRL, 0x10);
+    draw_pass_fail(i, 3, (inportw(IO_IEEP_CTRL) & 0x01) == 0x00);
 #endif
 
     while(1);
