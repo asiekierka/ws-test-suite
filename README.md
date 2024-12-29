@@ -17,6 +17,12 @@ Other useful tests:
  * [rtctest](https://forums.nesdev.org/viewtopic.php?t=21513) - covers the 2003 mapper's S-3511 RTC
  * [Robert Peip's test ROMs](https://github.com/MiSTer-devel/WonderSwan_MiSTer/tree/main/testroms) - tools for manual sprite priority and window testing
 
+## Checking test results
+
+Look at the source code. Unfortunately, there's no per-test documentation yet, but I'll leave a few notes:
+
+- The test results are typically output *right-to-left* (the rightmost checkmark refers to the first condition checked, the one left to it to the second condition checked, and so on).
+
 ## Tools
 
 ### timing-validator
