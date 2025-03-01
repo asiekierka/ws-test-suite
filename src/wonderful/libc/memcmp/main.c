@@ -20,16 +20,18 @@ int main(void) {
     
     int i = 0;
     text_printf(screen_1, 0, 0, i, "_fmemcmp");
-    draw_pass_fail(i, 3, _fmemcmp( abcde, abcdx, 5 ) < 0);
-    draw_pass_fail(i, 2, _fmemcmp( abcde, abcdx, 4 ) == 0);
-    draw_pass_fail(i, 1, _fmemcmp( abcde, xxxxx, 0 ) == 0);
+    draw_pass_fail(i, 4, _fmemcmp( abcde, abcdx, 5 ) < 0);
+    draw_pass_fail(i, 3, _fmemcmp( abcde, abcdx, 4 ) == 0);
+    draw_pass_fail(i, 2, _fmemcmp( abcde, xxxxx, 0 ) == 0);
+    draw_pass_fail(i, 1, _fmemcmp( abcde, abcde, 5 ) == 0);
     draw_pass_fail(i, 0, _fmemcmp( xxxxx, abcde, 1 ) > 0);
     i++;
     
     text_printf(screen_1, 0, 0, i, "_nmemcmp");
-    draw_pass_fail(i, 3, _nmemcmp( abcde, abcdx, 5 ) < 0);
-    draw_pass_fail(i, 2, _nmemcmp( abcde, abcdx, 4 ) == 0);
-    draw_pass_fail(i, 1, _nmemcmp( abcde, xxxxx, 0 ) == 0);
+    draw_pass_fail(i, 4, _nmemcmp( abcde, abcdx, 5 ) < 0);
+    draw_pass_fail(i, 3, _nmemcmp( abcde, abcdx, 4 ) == 0);
+    draw_pass_fail(i, 2, _nmemcmp( abcde, xxxxx, 0 ) == 0);
+    draw_pass_fail(i, 1, _nmemcmp( abcde, abcde, 5 ) == 0);
     draw_pass_fail(i, 0, _nmemcmp( xxxxx, abcde, 1 ) > 0);
     i++;
 
