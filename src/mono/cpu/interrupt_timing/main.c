@@ -20,14 +20,17 @@ IP_STORE_TEST_DEFINE(div_by_zero, "/ by zero");
 IP_STORE_TEST_DEFINE(rep_div_by_zero, "REP / by zero");
 IP_STORE_TEST_DEFINE(delay_on_sti, "IRQ after STI+NOP");
 IP_STORE_TEST_DEFINE(delay_on_popf, "IRQ after POPF+NOP");
+IP_STORE_TEST_DEFINE(delay_on_iret, "IRQ after IRET+NOP");
 IP_STORE_TEST_DEFINE(delay_on_es, "IRQ after ES:LODSW");
 IP_STORE_TEST_DEFINE(delay_on_lock, "IRQ after LOCK:LODSW");
 IP_STORE_TEST_DEFINE(no_delay_sti_sti, "IRQ after STI+STI");
-IP_STORE_TEST_DEFINE(test_delay_sti_popf, "IRQ after STI+POPF");
+IP_STORE_TEST_DEFINE(no_delay_sti_popf, "IRQ after STI+POPF");
+IP_STORE_TEST_DEFINE(no_delay_iret_sti, "IRQ after IRET+STI");
 IP_STORE_TEST_DEFINE(delay_on_pop_ss, "IRQ after POP SS+NOP");
 IP_STORE_TEST_DEFINE(delay_on_mov_ss, "IRQ after MOV SS,+NOP");
 IP_STORE_TEST_DEFINE(no_delay_mov_from_ss, "IRQ after MOV ,SS");
-// TODO: test IRET behaviour
+IP_STORE_TEST_DEFINE(brk_delay_on_popf, "BRK after POPF+NOP");
+IP_STORE_TEST_DEFINE(brk_no_delay_on_popf_sti, "BRK after POPF+STI");
 
 #include "test/pass_fail.h"
 
@@ -52,13 +55,17 @@ int main(void) {
     IP_STORE_TEST_CALL(rep_div_by_zero);
     IP_STORE_TEST_CALL(delay_on_sti);
     IP_STORE_TEST_CALL(delay_on_popf);
+    IP_STORE_TEST_CALL(delay_on_iret);
     IP_STORE_TEST_CALL(delay_on_es);
     IP_STORE_TEST_CALL(delay_on_lock);
     IP_STORE_TEST_CALL(no_delay_sti_sti);
-    IP_STORE_TEST_CALL(test_delay_sti_popf);
+    IP_STORE_TEST_CALL(no_delay_sti_popf);
+    IP_STORE_TEST_CALL(no_delay_iret_sti);
     IP_STORE_TEST_CALL(delay_on_pop_ss);
     IP_STORE_TEST_CALL(delay_on_mov_ss);
     IP_STORE_TEST_CALL(no_delay_mov_from_ss);
+    IP_STORE_TEST_CALL(brk_delay_on_popf);
+    IP_STORE_TEST_CALL(brk_no_delay_on_popf_sti);
 
     ws_serial_close();
     while(1);

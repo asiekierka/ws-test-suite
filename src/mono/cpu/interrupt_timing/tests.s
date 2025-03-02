@@ -27,6 +27,14 @@
     out IO_HWINT_ENABLE, al
     .endm
 
+    .macro set_brk_enable
+    pushf
+    pop ax
+    or ah, 0x01
+    push ax
+    popf
+    .endm
+
 
     // AX = offset
     // DX = IRQ vector
@@ -53,6 +61,17 @@ irq_handler_store_ip_on_irq:
     out IO_HWINT_ENABLE, al
     mov al, 0xFF
     out IO_HWINT_ACK, al
+    pop ax
+    pop bp
+    iret
+
+irq_handler_store_ip_on_brk:
+    push bp
+    mov bp, sp
+    push ax
+    mov ax, [bp + 2]
+    ss mov [ip_on_irq], ax
+    and byte ptr [bp + 7], 0xFE
     pop ax
     pop bp
     iret
@@ -171,6 +190,40 @@ do_delay_on_popf_ret:
     do_postamble
 
 
+    .global do_delay_on_iret
+do_delay_on_iret:
+    do_preamble
+
+    mov ax, offset irq_handler_store_ip_on_irq
+    mov dx, 8
+    call set_irq_vector
+
+    set_hwint_enable 0x01
+
+    pushf
+
+    pushf
+    pop ax
+    or ah, 0x02
+    push ax
+    push cs
+    push offset 1f
+    iret
+
+1:
+    nop
+
+    .global do_delay_on_iret_ret
+do_delay_on_iret_ret:
+    nop
+
+    popf
+
+    set_hwint_enable 0x00
+    ss mov ax, [ip_on_irq]
+    do_postamble
+
+
     .global do_delay_on_es
 do_delay_on_es:
     do_preamble
@@ -247,8 +300,8 @@ do_no_delay_sti_sti_ret:
     do_postamble
 
 
-    .global do_test_delay_sti_popf
-do_test_delay_sti_popf:
+    .global do_no_delay_sti_popf
+do_no_delay_sti_popf:
     do_preamble
 
     mov ax, offset irq_handler_store_ip_on_irq
@@ -270,8 +323,42 @@ do_test_delay_sti_popf:
     sti
     popf
 
-    .global do_test_delay_sti_popf_ret
-do_test_delay_sti_popf_ret:
+    .global do_no_delay_sti_popf_ret
+do_no_delay_sti_popf_ret:
+    nop
+
+    popf
+
+    set_hwint_enable 0x00
+    ss mov ax, [ip_on_irq]
+    do_postamble
+
+
+    .global do_no_delay_iret_sti
+do_no_delay_iret_sti:
+    do_preamble
+
+    mov ax, offset irq_handler_store_ip_on_irq
+    mov dx, 8
+    call set_irq_vector
+
+    set_hwint_enable 0x01
+
+    pushf
+
+    pushf
+    pop ax
+    or ah, 0x02
+    push ax
+    push cs
+    push offset 1f
+    iret
+
+1:
+    sti
+
+    .global do_no_delay_iret_sti_ret
+do_no_delay_iret_sti_ret:
     nop
 
     popf
@@ -357,6 +444,50 @@ do_no_delay_mov_from_ss_ret:
     popf
 
     set_hwint_enable 0x00
+    ss mov ax, [ip_on_irq]
+    do_postamble
+
+
+    .global do_brk_delay_on_popf
+do_brk_delay_on_popf:
+    do_preamble
+
+    mov ax, offset irq_handler_store_ip_on_brk
+    mov dx, 1
+    call set_irq_vector
+
+    pushf
+    set_brk_enable
+    nop
+
+    .global do_brk_delay_on_popf_ret
+do_brk_delay_on_popf_ret:
+    nop
+
+    popf
+
+    ss mov ax, [ip_on_irq]
+    do_postamble
+
+
+    .global do_brk_no_delay_on_popf_sti
+do_brk_no_delay_on_popf_sti:
+    do_preamble
+
+    mov ax, offset irq_handler_store_ip_on_brk
+    mov dx, 1
+    call set_irq_vector
+
+    pushf
+    set_brk_enable
+    sti
+
+    .global do_brk_no_delay_on_popf_sti_ret
+do_brk_no_delay_on_popf_sti_ret:
+    nop
+
+    popf
+
     ss mov ax, [ip_on_irq]
     do_postamble
 
