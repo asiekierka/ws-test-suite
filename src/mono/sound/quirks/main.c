@@ -96,7 +96,7 @@ int main(void) {
         ws_busywait(2 * APPROX_ONE_SCANLINE);
         outportb(IO_SND_CH_CTRL, 0x2 << j);
         ws_busywait(2 * APPROX_ONE_SCANLINE);
-        current_output = inportw(IO_SND_CH_OUT_L);
+        current_output = portw_wait_change(inportw(IO_SND_CH_OUT_L), IO_SND_CH_OUT_L);
         // - Wait six scanlines while the channel is in alt mode
         outportb(IO_SND_CH_CTRL, 0x22 << j);
         ws_busywait(6 * APPROX_ONE_SCANLINE);
@@ -161,19 +161,20 @@ int main(void) {
     // Test LFSR tick frequency:
     // 1. very slow (no change)
     // 2. four scanlines (no change after ~2 scanlines)
-    // 3. four scanlines (no change after ~8 scanlines)
+    // 3. four scanlines (change after ~8 scanlines)
     // 4. one tick (immediate change)
     text_puts(screen_1, 0, 0, i, msg_noise_tick_freq);
     outportw(IO_SND_FREQ(4), 1);
     ws_busywait(2 * APPROX_ONE_SCANLINE);
-    current_output = inportw(IO_SND_RANDOM);
+    current_output = portw_wait_change(inportw(IO_SND_RANDOM), IO_SND_RANDOM);
     ws_busywait(2 * APPROX_ONE_SCANLINE);
     draw_pass_fail(i, 3, inportw(IO_SND_RANDOM) == current_output);
     outportw(IO_SND_FREQ(4), 2048 - 1024);
     ws_busywait(4 * APPROX_ONE_SCANLINE);
-    current_output = inportw(IO_SND_RANDOM);
+    current_output = portw_wait_change(inportw(IO_SND_RANDOM), IO_SND_RANDOM);
     ws_busywait(2 * APPROX_ONE_SCANLINE);
     draw_pass_fail(i, 2, inportw(IO_SND_RANDOM) == current_output);
+    current_output = portw_wait_change(inportw(IO_SND_RANDOM), IO_SND_RANDOM);
     ws_busywait(8 * APPROX_ONE_SCANLINE);
     draw_pass_fail(i, 1, inportw(IO_SND_RANDOM) != current_output);
 
