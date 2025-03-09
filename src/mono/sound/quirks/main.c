@@ -17,10 +17,13 @@ static const char __wf_rom msg_no_update_disabled[] = "Counter off if chn off:";
 static const char __wf_rom msg_if_alt_mode[] = "... on if alt mode:";
 static const char __wf_rom msg_voice_on_without_channel[] = "Voice on w/o channel:";
 static const char __wf_rom msg_noise_off_without_channel[] = "Noise off w/o channel:";
+static const char __wf_rom msg_noise_ticks_bit_47[] = "LFSR tick on bit 4+7:";
+static const char __wf_rom msg_noise_tick_freq[] = "LFSR tick freq:";
 
 #include "test/pass_fail.h"
 
 extern uint16_t portw_wait_change(uint16_t value, uint16_t port);
+uint16_t portw_counter;
 
 #define APPROX_ONE_SCANLINE 84
 
@@ -133,6 +136,54 @@ int main(void) {
     outportb(IO_SND_CH_CTRL, SND_CH4_NOISE);
     ws_busywait(2 * APPROX_ONE_SCANLINE);
     draw_pass_fail(i++, 0, portw_wait_change(0, IO_SND_CH_OUT_L) == 0xFFFF);
+
+    // Test if LFSR updates are affected by:
+    // 1. CH4_ENABLE (no, no change)
+    // 2. CH4_NOISE (no, no change)
+    // 3. CH4_ENABLE | CH4_NOISE (yes, plays)
+    text_puts(screen_1, 0, 0, i, msg_noise_ticks_bit_47);
+    outportb(IO_SND_NOISE_CTRL, SND_NOISE_ENABLE | SND_NOISE_RESET | SND_NOISE_LEN_32767);
+    outportb(IO_SND_CH_CTRL, 0);
+    ws_busywait(2 * APPROX_ONE_SCANLINE);
+    outportb(IO_SND_CH_CTRL, SND_CH4_ENABLE);
+    current_output = inportw(IO_SND_RANDOM);
+    ws_busywait(2 * APPROX_ONE_SCANLINE);
+    draw_pass_fail(i, 2, inportw(IO_SND_RANDOM) == current_output);
+    outportb(IO_SND_CH_CTRL, SND_CH4_NOISE);
+    current_output = inportw(IO_SND_RANDOM);
+    ws_busywait(2 * APPROX_ONE_SCANLINE);
+    draw_pass_fail(i, 1, inportw(IO_SND_RANDOM) == current_output);
+    outportb(IO_SND_CH_CTRL, SND_CH4_ENABLE | SND_CH4_NOISE);
+    current_output = inportw(IO_SND_RANDOM);
+    ws_busywait(2 * APPROX_ONE_SCANLINE);
+    draw_pass_fail(i++, 0, inportw(IO_SND_RANDOM) != current_output);
+
+    // Test LFSR tick frequency:
+    // 1. very slow (no change)
+    // 2. four scanlines (no change after ~2 scanlines)
+    // 3. four scanlines (no change after ~8 scanlines)
+    // 4. one tick (immediate change)
+    text_puts(screen_1, 0, 0, i, msg_noise_tick_freq);
+    outportw(IO_SND_FREQ(4), 1);
+    ws_busywait(2 * APPROX_ONE_SCANLINE);
+    current_output = inportw(IO_SND_RANDOM);
+    ws_busywait(2 * APPROX_ONE_SCANLINE);
+    draw_pass_fail(i, 3, inportw(IO_SND_RANDOM) == current_output);
+    outportw(IO_SND_FREQ(4), 2048 - 1024);
+    ws_busywait(4 * APPROX_ONE_SCANLINE);
+    current_output = inportw(IO_SND_RANDOM);
+    ws_busywait(2 * APPROX_ONE_SCANLINE);
+    draw_pass_fail(i, 2, inportw(IO_SND_RANDOM) == current_output);
+    ws_busywait(8 * APPROX_ONE_SCANLINE);
+    draw_pass_fail(i, 1, inportw(IO_SND_RANDOM) != current_output);
+
+    outportw(IO_SND_FREQ(4), 2048 - 1);
+    current_output = inportw(IO_SND_RANDOM);
+    current_output = portw_wait_change(current_output, IO_SND_RANDOM);
+    current_output = portw_wait_change(current_output, IO_SND_RANDOM);
+    draw_pass_fail(i++, 0, portw_counter == 0);
+
+    outportw(IO_SND_FREQ(4), 2048 - 256);
     
     while(1);
 }

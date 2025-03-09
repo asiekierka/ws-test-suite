@@ -19,4 +19,6 @@ portw_wait_change:
     loop 1b
     mov ax, 0xFFFF
 2:
+    xor cx, 0x1FFF
+    mov word ptr [portw_counter], cx
     WF_PLATFORM_RET
