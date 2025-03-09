@@ -20,6 +20,7 @@ static const char __wf_rom msg_noise_off_without_channel[] = "Noise off w/o chan
 static const char __wf_rom msg_noise_ticks_bit_37[] = "LFSR tick on bit 3+7:";
 static const char __wf_rom msg_noise_tick_freq[] = "LFSR tick freq:";
 static const char __wf_rom msg_noise_lfsr_reset[] = "LFSR reset immediate:";
+static const char __wf_rom msg_period_counter_memory[] = "No counter reset:";
 
 #include "test/pass_fail.h"
 
@@ -197,6 +198,20 @@ lfsr_reset_retry:
     j = inportb(IO_SND_NOISE_CTRL);
     draw_pass_fail(i, 1, !current_output);
     draw_pass_fail(i++, 0, !(j & SND_NOISE_RESET));
+
+    // Test period counter resets
+    text_puts(screen_1, 0, 0, i, msg_period_counter_memory);
+    outportw(IO_SND_FREQ(1), 2048 - 1024);
+    outportb(IO_SND_CH_CTRL, SND_CH1_ENABLE);
+    // Synchronize to a specific sample
+    while (inportw(IO_SND_CH_OUT_L) != 7);
+    // Disable the channel
+    outportb(IO_SND_CH_CTRL, 0);
+    // Re-enable the channel
+    ws_busywait(16 * APPROX_ONE_SCANLINE);
+    outportb(IO_SND_CH_CTRL, SND_CH1_ENABLE);
+    ws_busywait(2 * APPROX_ONE_SCANLINE);
+    draw_pass_fail(i++, 0, inportw(IO_SND_CH_OUT_L) >= 7);
 
     while(1);
 }
