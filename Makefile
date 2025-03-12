@@ -55,7 +55,9 @@ endif
 
 TEST_MONO_DIRECTORIES	:= $(shell find -L src/mono -type f -name 'main.*' | sed 's#/[^/]*$$##')
 TEST_COLOR_DIRECTORIES	:= $(shell find -L src/color -type f -name 'main.*' | sed 's#/[^/]*$$##')
+ifneq ($(TARGET),wswan/bootfriend)
 TEST_MONO_DIRECTORIES	+= $(shell find -L src/tools -type f -name 'main.*' | sed 's#/[^/]*$$##')
+endif
 TEST_MONO_DIRECTORIES	+= $(shell find -L src/wonderful -type f -name 'main.*' | sed 's#/[^/]*$$##')
 TEST_ROMS		:= \
 	$(addsuffix $(EXT_MONO),$(subst src,build/roms,$(TEST_MONO_DIRECTORIES))) \
@@ -118,6 +120,13 @@ compile_commands.json: $(OBJS) | Makefile
 # Rules
 # -----
 
+build/%_custom_crt0.ws : $(OBJS)
+	@echo "  ROMLINK $@"
+	@$(MKDIR) -p $(@D)
+	@$(MKDIR) -p build/elfs/$(@D)
+	$(_V)$(CC) -r -o build/elfs/$@_stage1.elf $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .ws,,$@))%, $(OBJS_TEST)) $(LDFLAGS)
+	$(_V)$(BUILDROM) -o $@ -c $(subst build/roms,src,$(subst .ws,/wfconfig.toml,$@)) --output-elf build/elfs/$@.elf $(BUILDROMFLAGS) build/elfs/$@_stage1.elf
+
 build/%.ws : $(OBJS)
 	@echo "  ROMLINK $@"
 	@$(MKDIR) -p $(@D)
@@ -131,6 +140,13 @@ build/%.wsc : $(OBJS)
 	@$(MKDIR) -p build/elfs/$(@D)
 	$(_V)$(CC) -r -o build/elfs/$@_stage1.elf $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .wsc,,$@))%, $(OBJS_TEST)) $(WF_CRT0) $(LDFLAGS)
 	$(_V)$(BUILDROM) -o $@ -c $(subst build/roms,src,$(subst .wsc,/wfconfig.toml,$@)) --output-elf build/elfs/$@.elf $(BUILDROMFLAGS) build/elfs/$@_stage1.elf
+
+build/%_custom_crt0.bfb : $(OBJS)
+	@echo "  BFBLINK $@"
+	@$(MKDIR) -p $(@D)
+	@$(MKDIR) -p build/elfs/$(@D)
+	$(_V)$(CC) -r -o build/elfs/$@_stage1.elf $(OBJS_ASSETS) $(OBJS_COMMON) $(filter $(subst build/roms,$(BUILDDIR)/src,$(subst .bfb,,$@))%, $(OBJS_TEST)) $(LDFLAGS)
+	$(_V)$(BUILDBFB) -o $@ --output-elf build/elfs/$@.elf $(BUILDROMFLAGS) build/elfs/$@_stage1.elf
 
 build/%.bfb : $(OBJS)
 	@echo "  BFBLINK $@"
