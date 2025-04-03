@@ -8,7 +8,7 @@
 
 /* I/O SUBSYSTEM */
 
-#define PORT_PAGES 7
+#define PORT_PAGES 8
 #define PORT_BYTE 0x0000
 #define PORT_WORD 0x8000
 #define PORT_READ_ONLY 0x4000
@@ -129,9 +129,26 @@ static const uint16_t __wf_rom port_page_values[] = {
     0xB1 | PORT_BYTE,
     0xB3 | PORT_BYTE,
     0xB5 | PORT_BYTE,
-    0xBA | PORT_WORD | PORT_READ_ONLY,
-    0xBC | PORT_WORD | PORT_READ_ONLY,
-    0xBE | PORT_WORD | PORT_READ_ONLY
+    0xBA | PORT_WORD,
+    0xBC | PORT_WORD,
+    0xBE | PORT_WORD,
+
+    0xC4 | PORT_WORD,
+    0xC6 | PORT_WORD,
+    0xC8 | PORT_WORD,
+    0xFFFF,
+    0xCA | PORT_BYTE,
+    0xCB | PORT_BYTE,
+    0xFFFF,
+    0xCC | PORT_BYTE,
+    0xCD | PORT_BYTE,
+    0xFFFF,
+    0xFFFF,
+    0xFFFF,
+    0xD6 | PORT_BYTE,
+    0xD7 | PORT_BYTE,
+    0xD8 | PORT_BYTE,
+    0xD9 | PORT_BYTE
 };
 static bool port_reload = true;
 
