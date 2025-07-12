@@ -5,10 +5,26 @@
 #include <wsx/planar_unpack.h>
 #include "resources.h"
 
+typedef struct {
+	union {
+		struct {
+			uint16_t tile : 9;
+			uint8_t palette : 3;
+			bool inside : 1;
+			bool priority : 1;
+			bool flip_h : 1;
+			bool flip_v : 1;
+		};
+		uint16_t attr;
+	};
+	uint8_t y;
+	uint8_t x;
+} ws_legacy_sprite_t;
+
 __attribute__((section(".iramx_1800")))
-ws_screen_cell_t SCREEN_1[32 * 32];
+uint16_t SCREEN_1[32 * 32];
 __attribute__((section(".iramx_1600")))
-ws_sprite_t SPRITES[128];
+ws_legacy_sprite_t SPRITES[128];
 __attribute__((section(".iramx_2000")))
 ws_tile_t tiles_2bpp[512];
 

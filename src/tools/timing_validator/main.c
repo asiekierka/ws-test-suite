@@ -167,7 +167,7 @@ static void generate(void) {
     bool set_line = false;
 
     cpu_irq_disable();
-    ws_hwint_set(HWINT_VBLANK);
+    ws_hwint_enable(HWINT_VBLANK);
     ws_hwint_set_handler(HWINT_IDX_VBLANK, (ws_int_handler_t) vblank_irq_handler);
 
     buf = IRQ_AREA;

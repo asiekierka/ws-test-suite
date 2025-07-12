@@ -5,7 +5,7 @@
 
 check_fail:
     xor ax, ax
-    ASM_PLATFORM_RET
+    IA16_RET
 
     .global check_aam_non_10
 check_aam_non_10:

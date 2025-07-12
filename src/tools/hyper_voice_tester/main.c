@@ -9,7 +9,7 @@
 __attribute__((section(".iramx.audio_buffer")))
 uint8_t audio_buffer[256];
 __attribute__((section(".iramx_1800")))
-ws_screen_cell_t screen_1[32 * 32];
+uint16_t screen_1[32 * 32];
 __attribute__((section(".iramx_2000")))
 ws_tile_t tiles_2bpp[512];
 
@@ -175,7 +175,7 @@ int main(void) {
     outportw(IO_DISPLAY_CTRL, DISPLAY_SCR1_ENABLE);
 
     ws_hwint_set_default_handler_vblank();
-    ws_hwint_set(HWINT_VBLANK);
+    ws_hwint_enable(HWINT_VBLANK);
     cpu_irq_enable();
 
     text_puts(screen_1, SCR_ENTRY_PALETTE(8), 0, 16, msg_hvtester);

@@ -6,7 +6,7 @@
 #include "text.h"
 
 __attribute__((section(".iramx_1800")))
-ws_screen_cell_t screen_1[32 * 32];
+uint16_t screen_1[32 * 32];
 __attribute__((section(".iramx_2000")))
 ws_tile_t tiles_2bpp[512];
 
