@@ -76,7 +76,7 @@ int main(void) {
     outportw(IO_DMA_SOURCE_H, 0x0001);
     outportw(IO_DMA_SOURCE_L, 0x0000);
     outportw(IO_DMA_DEST, 0xFF00);
-    outportw(IO_DMA_LENGTH, 1);
+    outportw(IO_DMA_LENGTH, 2);
     text_puts(screen_1, 0, 0, i, msg_gdma_sram);
     cycles = do_cycle_count_dma();
     text_printf(screen_1, 0, 24, i, msg_d, cycles);
