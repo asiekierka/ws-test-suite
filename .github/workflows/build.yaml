@@ -11,13 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     container: cbrzeszczot/wonderful:wswan-latest
     steps:
-      - name: Clone Project
-        uses: actions/checkout@v3
+      - name: Clone project
+        uses: actions/checkout@v4
+
+      - name: Update libraries
+        run: wf-pacman -Syu --noconfirm && wf-pacman -Su --noconfirm
 
       - name: Build
         run: make
 
-      - name: Archive ROM
+      - name: Archive artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Test suite
