@@ -4,6 +4,7 @@
 #include <wonderful.h>
 
 void text_init(void);
+void text_init_4bpp(void);
 void text_puts(void __wf_iram *dest, uint16_t tile, uint16_t x, uint16_t y, const char __far* text);
 
 __attribute__((format(printf, 5, 6)))
